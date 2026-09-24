@@ -29,6 +29,8 @@ const SLICE_Z = 0;                    // section plane through cylinder 1's axis
 const EXP = .8;                       // exploded-view scale for the film (80% of the app's spacing)
 const up = (cue: string, off: number, dur = 1.5) => ramp(cue, off, dur, 0, EXP);
 const down = (cue: string, off: number, dur = 1.25) => ramp(cue, off, dur, EXP, 0);
+/** Cold-open assembly: a layer starts exploded and lands 1.2 s after TITLE+off (so off = −1.3 lands just before the title). */
+const build = (off: number) => [{ t: 0, v: EXP }, ...ramp('TITLE', off, 1.2, EXP, 0)];
 const SECTION_FADE = { timing: 0, oilpump: 0, exhaust: .1, intake: .2, throttle: .2, filter: .2, injector: .35 };
 
 export const PILOT: Shot[] = [
@@ -38,15 +40,26 @@ export const PILOT: Shot[] = [
       { id: 'a1', text: 'Inside this block of metal, fuel is burning, in a steady rhythm of small, controlled bursts.', pause: .6 },
       { id: 'a2', text: 'So how does fire, trapped inside a cylinder, become smooth and useful rotation?', cueEnd: 'TITLE', pause: 0 },
     ],
-    /* Low three-quarter from the front-exhaust corner, 50 mm, slow push-in and orbit while the engine runs.
-       The engine sits right of centre so the title owns the left half of the sheet.
-       Look: it starts as a pure ink drawing on the paper and shades in under the first line of narration. */
+    /* Opens on the engine exploded into its build layers, drawn in ink on the paper, while the camera orbits it from
+       the rear-exhaust quarter round to the broadside (45 mm). The drawing shades in under the first line of narration; then the engine
+       builds itself up in assembly order, one layer landing after another, pushing in as it closes. The last part (the
+       timing cover) lands just as the question ends; the camera then pushes in, easing the finished engine right as the title arrives. */
+    engine: {
+      explode: {
+        crank: build(-8.0), mb: build(-7.5), pist: build(-7.0), op: build(-6.5), pan: build(-6.0), fw: build(-5.5),
+        gasket: build(-5.0), head: build(-4.5), valves: build(-4.0), cams: build(-3.5), tm: build(-3.0), cover: build(-2.5),
+        exh: build(-2.1), intake: build(-1.7), tcov: build(-1.3),
+      },
+    },
     camera: [
-      { t: 0, az: 130, pol: 80, rad: 15, target: [0, 1.3, -.3], mm: 50, shift: [.24, 0] },
-      { t: 'TITLE-1', az: 118, pol: 77, rad: 13, target: [0, 1.35, -.25], mm: 50, shift: [.27, 0] },
-      { t: 'end', az: 112, pol: 75, rad: 12.4, target: [0, 1.35, -.2], mm: 50, shift: [.25, 0] },
+      { t: 0, az: 28, pol: 80, rad: 26, target: [0, 2.5, 0], mm: 45 },
+      { t: 'TITLE-8.5', az: 62, pol: 76, rad: 25, target: [0, 2.45, 0], mm: 45 },
+      { t: 'TITLE-4', az: 92, pol: 75, rad: 25, target: [0, 2.7, 0], mm: 45 },
+      { t: 'TITLE-1', az: 106, pol: 76, rad: 21.5, target: [0, 2.2, -.2], mm: 46, shift: [.05, 0] },
+      { t: 'TITLE+1.2', az: 118, pol: 77, rad: 13, target: [0, 1.35, -.25], mm: 50, shift: [.27, 0] },
+      { t: 'end', az: 122, pol: 76, rad: 12.4, target: [0, 1.35, -.2], mm: 50, shift: [.25, 0] },
     ],
-    look: { shade: [{ t: 0, v: 0 }, { t: 2.4, v: 0 }, { t: 7, v: 1, ease: 'inOut' }], bloom: .15 },
+    look: { shade: [{ t: 0, v: 0 }, { t: 1.8, v: 0 }, { t: 6, v: 1, ease: 'inOut' }], bloom: .15 },
     overlays: [{ type: 'title', from: 'TITLE+0.2', to: 'end-0.2', fade: .7, kicker: 'Engine Lab · Pilot', lines: ['How an engine turns', 'fire into motion'] }],
     audio: { ambience: [{ t: 0, v: 1 }, { t: 'end', v: .8 }], mech: true } },
 
@@ -71,7 +84,7 @@ export const PILOT: Shot[] = [
        square-on longitudinal section that reads like a textbook plate. The chain of cause and effect runs along
        the bottom margin, under the engine. */
     camera: [
-      { t: 0, az: 112, pol: 75, rad: 12.4, target: [0, 1.35, -.2], mm: 50, shift: [.25, 0] },
+      { t: 0, az: 122, pol: 76, rad: 12.4, target: [0, 1.35, -.2], mm: 50, shift: [.25, 0] },
       { t: 'CUT+3.2', az: 102, pol: 78, rad: 11.2, target: [0, 1.55, 0], mm: 45 },
       { t: 'C2+0.4', az: 99, pol: 79, rad: 11.2, target: [0, 1.5, .1], mm: 45 },
       { t: 'end', az: 97, pol: 80, rad: 11.6, target: [0, 1.5, 0], mm: 45 },

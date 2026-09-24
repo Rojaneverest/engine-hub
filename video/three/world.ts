@@ -6,15 +6,17 @@
      →  bloom (hot emissives only)  →  depth of field (depth-based gather, alpha carried)
      →  final: ACES tone map on the subject, composited over procedural drafting paper (contact AO + shadows land on
         the paper), then ink line work from the ID pass, paper grain and dither.
-   post.shade fades the shaded subject in over its own line drawing (0 = pure ink drawing on paper). */
+   post.shade fades the shaded subject in over its own line drawing (0 = pure ink drawing on paper).
+   Faded parts are never drawn as translucent fills: as a part fades its shading dissolves and it is handed over
+   to a faint ink outline (post.ghost = strength), drawn only where the ghosted part is actually visible. */
 import * as THREE from 'three';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { createEngine, Engine } from '../../src/engine3d/engine';
-import { InkIds, INK_GLSL } from '../../src/engine3d/ink';
+import { InkIds, INK_GLSL, GHOST_GLSL } from '../../src/engine3d/ink';
 import { PALETTE, RIG, INK } from '../film/theme';
 
 export type CamState = { pos: THREE.Vector3; target: THREE.Vector3; fov: number; shift?: [number, number] };
-export type Post = { ao: number; bloom: number; bloomRadius: number; dof: number; focus: number; exposure: number; key: number; fill: number; rim: number; shade: number; grid: number; ink: number };
+export type Post = { ao: number; bloom: number; bloomRadius: number; dof: number; focus: number; exposure: number; key: number; fill: number; rim: number; shade: number; grid: number; ink: number; ghost: number };
 
 function dot(): THREE.Texture | null {
   const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'); if (!x) return null;
@@ -29,6 +31,7 @@ function contactTexture(): THREE.Texture | null {
 }
 /** Small seeded PRNG so post-processing kernels are identical in every render tab. */
 function mulberry(a: number) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 const hexVec = (h: string) => { const c = new THREE.Color(h); return new THREE.Vector3(c.r, c.g, c.b); };  // sRGB 0..1
 
 const FS_VERT = `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0., 1.); }`;
@@ -95,10 +98,11 @@ const DOF_FRAG = `
 /* Final: tone-mapped subject over drafting paper, ink, grain, dither. */
 const FINAL_FRAG = `
   varying vec2 vUv; uniform sampler2D tColor; uniform sampler2D tAOb; uniform sampler2D tDepth; uniform float exposure; uniform vec2 res;
-  uniform float shade; uniform float grid; uniform float inkOutline; uniform float inkCrease; uniform float inkAmt;
+  uniform float shade; uniform float grid; uniform float inkOutline; uniform float inkCrease; uniform float inkAmt; uniform float ghostAmt;
   uniform vec3 paperC; uniform vec3 paperEdge; uniform vec3 inkC; uniform vec3 gridC;
   ${DEPTH_FN}
   ${INK_GLSL}
+  ${GHOST_GLSL}
   vec3 aces(vec3 x){ x *= exposure / .78; mat3 m1 = mat3(.59719,.07600,.02840,.35458,.90834,.13383,.04823,.01566,.83777);
     mat3 m2 = mat3(1.60475,-.10208,-.00327,-.53108,1.10813,-.07276,-.07367,-.00605,1.07602);
     vec3 v = m1 * x; vec3 a = v * (v + .0245786) - .000090537; vec3 b = v * (.983729 * v + .4329510) + .238081; return clamp(m2 * (a / b), 0., 1.); }
@@ -118,7 +122,7 @@ const FINAL_FRAG = `
     vec3 pap = paper(vUv) * mix(1., texture2D(tAOb, vUv).x, .9);
     vec3 c = mix(pap, subj, a * shade);
     vec2 e = inkEdges(vUv); float k = max(e.x * inkOutline, e.y * inkCrease) * inkAmt;
-    c = mix(c, inkC, k);
+    c = mix(c, inkC, max(k, ghostEdges(vUv) * ghostAmt));
     c += (hash(gl_FragCoord.xy * .37) - .5) * .018;                 // paper tooth
     c += (hash(gl_FragCoord.xy) - .5) / 255.;
     gl_FragColor = vec4(c, 1.);
@@ -131,8 +135,8 @@ export class World {
   key: THREE.DirectionalLight; fill: THREE.DirectionalLight; rim: THREE.DirectionalLight; amb: THREE.HemisphereLight;
   sceneRT: THREE.WebGLRenderTarget; rtA: THREE.WebGLRenderTarget; rtB: THREE.WebGLRenderTarget; aoRT: THREE.WebGLRenderTarget; aoBRT: THREE.WebGLRenderTarget;
   quad: THREE.Mesh; quadScene = new THREE.Scene(); quadCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-  mats: Record<string, THREE.ShaderMaterial> = {}; bloom: UnrealBloomPass; ink: InkIds; contact: THREE.Mesh;
-  post: Post = { ao: 1, bloom: .2, bloomRadius: .5, dof: 0, focus: 10, exposure: 1, key: 1, fill: 1, rim: 1, shade: 1, grid: 1, ink: 1 };
+  mats: Record<string, THREE.ShaderMaterial> = {}; bloom: UnrealBloomPass; ink: InkIds; ghostInk: InkIds; contact: THREE.Mesh;
+  post: Post = { ao: 1, bloom: .2, bloomRadius: .5, dof: 0, focus: 10, exposure: 1, key: 1, fill: 1, rim: 1, shade: 1, grid: 1, ink: 1, ghost: .5 };
   constructor(w: number, h: number) {
     this.w = w; this.h = h;
     const r = this.renderer = new THREE.WebGLRenderer({ antialias: false, alpha: false, preserveDrawingBuffer: true });
@@ -173,7 +177,7 @@ export class World {
     this.rtA = new THREE.WebGLRenderTarget(w, h, hdr); this.rtB = new THREE.WebGLRenderTarget(w, h, hdr);
     this.aoRT = new THREE.WebGLRenderTarget(w, h, { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
     this.aoBRT = new THREE.WebGLRenderTarget(w, h, { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
-    this.ink = new InkIds(w, h, INK.idScale);
+    this.ink = new InkIds(w, h, INK.idScale); this.ghostInk = new InkIds(w, h, INK.idScale);
     const rand = mulberry(20260924), kernel: THREE.Vector3[] = [];
     for (let i = 0; i < 16; i++) { const v = new THREE.Vector3(rand() * 2 - 1, rand() * 2 - 1, rand() * .9 + .1).normalize(); let sc = i / 16; sc = .1 + .9 * sc * sc; kernel.push(v.multiplyScalar(sc * (.3 + .7 * rand()))); }
     const common = () => ({ res: { value: new THREE.Vector2(w, h) }, cNear: { value: .2 }, cFar: { value: 120 }, tDepth: { value: this.sceneRT.depthTexture } });
@@ -184,7 +188,7 @@ export class World {
     this.mats.dof = SM(DOF_FRAG, { tColor: { value: null }, focus: { value: 10 }, aperture: { value: 0 } });
     const P = PALETTE;
     this.mats.final = SM(FINAL_FRAG, { tColor: { value: null }, tAOb: { value: this.aoBRT.texture }, exposure: { value: 1 }, shade: { value: 1 }, grid: { value: 1 },
-      inkOutline: { value: INK.outline }, inkCrease: { value: INK.crease }, inkAmt: { value: 1 }, tInkId: { value: this.ink.rt.texture }, inkIdScale: { value: INK.idScale },
+      inkOutline: { value: INK.outline }, inkCrease: { value: INK.crease }, inkAmt: { value: 1 }, tInkId: { value: this.ink.rt.texture }, inkIdScale: { value: INK.idScale }, tGhostId: { value: this.ghostInk.rt.texture }, ghostAmt: { value: .5 },
       paperC: { value: hexVec(P.paper) }, paperEdge: { value: hexVec(P.paperEdge) }, inkC: { value: hexVec(P.ink) }, gridC: { value: hexVec(P.grid) } });
     this.quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), this.mats.final); this.quad.frustumCulled = false; this.quadScene.add(this.quad);
     // Bloom only what is genuinely hot: threshold on the peak channel, so combustion glows bloom while lit metal does not.
@@ -242,8 +246,20 @@ export class World {
   private pass(mat: THREE.ShaderMaterial, target: THREE.WebGLRenderTarget | null) { this.quad.material = mat; this.renderer.setRenderTarget(target); this.renderer.render(this.quadScene, this.quadCam); }
   render() {
     const r = this.renderer, cam = this.camera, P = this.post, M = this.mats;
+    // ghosted parts: dissolve the fill (never a translucent grey blob) and remember them for the faint-outline pass
+    const ghosts = new Map<THREE.Object3D, number>(), restore: [any, number][] = [], hid: THREE.Object3D[] = [];
+    if (this.engine) this.engine.root.traverseVisible((o: any) => {
+      if (!o.isMesh || o.userData.twin || o.userData.noInk || Array.isArray(o.material)) return;
+      const m = o.material, op = m.userData.ghostOp ?? m.opacity; if (op >= .999) return;
+      if (m.userData.ghostOp == null) { m.userData.ghostOp = op; restore.push([m, op]); m.opacity = clamp01((op - .5) / .5); }
+      ghosts.set(o, (1 - m.opacity) * clamp01(op / .06)); if (m.opacity < .01) { o.visible = false; hid.push(o); }
+    });
     r.setClearColor(0x000000, 0); r.setRenderTarget(this.sceneRT); r.clear(); r.render(this.scene, cam);
     this.ink.render(r, this.scene, cam, o => o.userData.part != null);
+    for (const o of hid) o.visible = true;
+    if (ghosts.size) this.ghostInk.renderGhosts(r, this.scene, cam, ghosts, (o: any) => o.userData.part != null && !ghosts.has(o) && !o.userData.noInk && (o.material as any).opacity >= .5);
+    else { r.setRenderTarget(this.ghostInk.rt); r.setClearColor(0x000000, 0); r.clear(); r.setRenderTarget(null); }
+    for (const [m, op] of restore) { m.opacity = op; delete m.userData.ghostOp; }
     // AO
     M.ao.uniforms.proj.value.copy(cam.projectionMatrix); M.ao.uniforms.projInv.value.copy(cam.projectionMatrixInverse);
     this.pass(M.ao, this.aoRT); M.aoBlur.uniforms.strength.value = P.ao; this.pass(M.aoBlur, this.aoBRT);
@@ -254,7 +270,7 @@ export class World {
     // DoF
     M.dof.uniforms.tColor.value = this.rtA.texture; M.dof.uniforms.focus.value = P.focus; M.dof.uniforms.aperture.value = P.dof; this.pass(M.dof, this.rtB);
     // final
-    const F = M.final.uniforms; F.tColor.value = this.rtB.texture; F.exposure.value = P.exposure; F.shade.value = P.shade; F.grid.value = P.grid; F.inkAmt.value = P.ink;
+    const F = M.final.uniforms; F.tColor.value = this.rtB.texture; F.exposure.value = P.exposure; F.shade.value = P.shade; F.grid.value = P.grid; F.inkAmt.value = P.ink; F.ghostAmt.value = P.ghost;
     this.pass(M.final, null);
   }
 }
