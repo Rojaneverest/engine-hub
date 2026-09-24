@@ -1,0 +1,13 @@
+node_modules/
+.env
+build/
+out/
+dist/
+app/.build/
+backups/
+.DS_Store
+__pycache__/
+.claude/settings.local.json
+# generated audio (rebuild: TTS_PROVIDER=manual python3 audio/tts.py && python3 audio/mix.py)
+public/audio/vo/
+public/audio/mix.wav

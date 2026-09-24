@@ -1,0 +1,90 @@
+{
+ "voice": "manual",
+ "lines": {
+  "a1": {
+   "dur": 6.844,
+   "file": "audio/vo/a1.wav"
+  },
+  "a2": {
+   "dur": 5.612,
+   "file": "audio/vo/a2.wav"
+  },
+  "b1": {
+   "dur": 3.21,
+   "file": "audio/vo/b1.wav"
+  },
+  "b2": {
+   "dur": 1.946,
+   "file": "audio/vo/b2.wav"
+  },
+  "b3": {
+   "dur": 1.802,
+   "file": "audio/vo/b3.wav"
+  },
+  "b4": {
+   "dur": 3.529,
+   "file": "audio/vo/b4.wav"
+  },
+  "c1": {
+   "dur": 3.053,
+   "file": "audio/vo/c1.wav"
+  },
+  "c2": {
+   "dur": 4.608,
+   "file": "audio/vo/c2.wav"
+  },
+  "c3": {
+   "dur": 2.93,
+   "file": "audio/vo/c3.wav"
+  },
+  "c4": {
+   "dur": 7.959,
+   "file": "audio/vo/c4.wav"
+  },
+  "d1": {
+   "dur": 4.235,
+   "file": "audio/vo/d1.wav"
+  },
+  "e1": {
+   "dur": 3.488,
+   "file": "audio/vo/e1.wav"
+  },
+  "e2": {
+   "dur": 2.547,
+   "file": "audio/vo/e2.wav"
+  },
+  "e3": {
+   "dur": 3.824,
+   "file": "audio/vo/e3.wav"
+  },
+  "e4": {
+   "dur": 6.21,
+   "file": "audio/vo/e4.wav"
+  },
+  "e5": {
+   "dur": 8.979,
+   "file": "audio/vo/e5.wav"
+  },
+  "e6": {
+   "dur": 5.689,
+   "file": "audio/vo/e6.wav"
+  },
+  "f1": {
+   "dur": 6.399,
+   "file": "audio/vo/f1.wav"
+  },
+  "f2": {
+   "dur": 2.354,
+   "file": "audio/vo/f2.wav"
+  },
+  "f3": {
+   "dur": 3.908,
+   "file": "audio/vo/f3.wav"
+  },
+  "f4": {
+   "dur": 7.976,
+   "file": "audio/vo/f4.wav"
+  }
+ },
+ "mix": "audio/mix.wav"
+}
