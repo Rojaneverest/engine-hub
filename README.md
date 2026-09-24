@@ -41,5 +41,17 @@ Shot ids: cold-open, the-job, apart, mechanism, slider-crank, four-stroke.
 Remotion's downloaded headless Chrome has an invalid code signature on recent macOS (killed on launch),
 so renders point REMOTION_BROWSER at the installed Google Chrome.
 
-Visual direction (lenses, camera path, depth of field, lighting cues) is documented per shot in
-`video/film/storyboard.pilot.ts`; the render pipeline (SSAO, bloom, DoF, ACES) is in `video/three/world.ts`.
+## Look: "the engineering drawing that comes alive"
+Film and app share one visual system: warm drafting paper, ink line work, hatched section faces, low-chroma
+hardware, and strict functional colour (cerulean = air, vermilion = combustion / force, amber = fuel).
+- `src/engine3d/engine.ts` — housings are closed solids with real cavities (bores with liners, hollow crankcase with
+  main-bearing bulkheads, ported heads with pent-roof chambers, hollow cam cover, sump tray, timing cover), so any clip
+  plane shows a true section; cut faces are hatched in world space on the plane that made the cut.
+- `src/engine3d/ink.ts` — ID pass + edge shader for the ink outlines (silhouettes, part boundaries, section outlines, creases).
+- `video/film/theme.ts` — palette, type (Barlow Condensed / Barlow), light rig, ink strength.
+- `video/three/world.ts` — render pipeline: scene → SSAO → bloom → DoF → ACES subject composited over procedural paper
+  (dot grid, contact shadow) → ink. `look.shade` fades between pure line drawing (0) and fully shaded (1).
+- `video/components/overlays.tsx` — ink-on-paper graphics: "Fig. 0n" chapter marks, numbered margin callouts that
+  never collide, slider-crank annotations in the margins, the cycle ring.
+
+Per-shot camera (lens, lens `shift` for off-centre framing), look cues and engine state are in `video/film/storyboard.pilot.ts`.

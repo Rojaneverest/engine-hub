@@ -7,7 +7,7 @@ import { getWorld } from '../three/world';
 import { PALETTE, SIZE } from '../film/theme';
 import { OVERLAYS, Caption } from './overlays';
 
-const GLOW_BOOST = 3.2;
+const GLOW_BOOST = 1;
 
 export const FilmView: React.FC<{ film: FilmT; offset?: number; captions?: boolean; mix?: string | null }> = ({ film, offset = 0, captions = false, mix }) => {
   const frame = useCurrentFrame() + offset;
@@ -17,7 +17,7 @@ export const FilmView: React.FC<{ film: FilmT; offset?: number; captions?: boole
   // Pose the world for this frame (deterministic; safe to do during render).
   const world = getWorld(SIZE.w, SIZE.h), eng = world.useEngine(fs.shot.arch);
   eng.update(fs.engine as any);
-  // glows are HDR in the film (they feed the bloom); the shared engine keeps app-friendly 0..1 emissive levels
+  // glows run a little hotter in the film than in the app (on paper they tint rather than bloom)
   for (const [, Pp] of eng.parts) for (const m of Pp.mats as Set<any>) if (m.emissive) m.emissive.multiplyScalar(GLOW_BOOST);
   const c = fs.cam, d = Math.PI / 180;
   const tg = c.target ? new THREE.Vector3(c.target[0], c.target[1], c.target[2])
@@ -26,15 +26,16 @@ export const FilmView: React.FC<{ film: FilmT; offset?: number; captions?: boole
   // focus distance: blend the focus subjects of the surrounding keys (anchor / point / plain distance; default = target)
   const fdist = (f: any) => typeof f === 'number' ? f : f == null ? pos.distanceTo(tg) : pos.distanceTo(world.resolve(f, new THREE.Vector3()));
   const focus = fdist(c.fa) + (fdist(c.fb) - fdist(c.fa)) * c.u;
-  world.setPost({ exposure: fs.exposure, dof: c.dof, focus, ao: fs.look.ao, bloom: fs.look.bloom, key: fs.look.key, fill: fs.look.fill, rim: fs.look.rim });
-  world.setCamera({ pos, target: tg, fov: c.fov }); world.setFloor(fs.floorDrop);
+  world.setPost({ exposure: fs.exposure, dof: c.dof, focus, ao: fs.look.ao, bloom: fs.look.bloom, key: fs.look.key, fill: fs.look.fill, rim: fs.look.rim,
+    shade: fs.look.shade, grid: fs.look.grid, ink: fs.look.ink });
+  world.setCamera({ pos, target: tg, fov: c.fov, shift: c.shift }); world.setFloor(fs.floorDrop);
   const host = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => { const el = host.current!; if (world.renderer.domElement.parentElement !== el) el.appendChild(world.renderer.domElement); world.render(); });
-  return <AbsoluteFill style={{ background: PALETTE.bg0, overflow: 'hidden' }}>
+  return <AbsoluteFill style={{ background: PALETTE.paper, overflow: 'hidden' }}>
     <div ref={host} style={{ position: 'absolute', inset: 0 }} />
     {fs.overlays.map((o, i) => { const C = OVERLAYS[o.ov.type]; return C ? <C key={i} o={o} fs={fs} world={world} /> : null; })}
     {captions && <Caption fs={fs} />}
-    <AbsoluteFill style={{ background: '#000', opacity: fs.dip }} />
+    <AbsoluteFill style={{ background: PALETTE.paper, opacity: fs.dip }} />
     {mix && <Audio src={staticFile(mix)} startFrom={offset} />}
   </AbsoluteFill>;
 };

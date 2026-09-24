@@ -1,36 +1,31 @@
-/* Visual identity of the film: a deep slate studio, graphite and brushed-steel hardware,
-   and strict functional colour — cyan = air/intake, amber-orange = combustion/pressure/heat,
-   gold = callouts and highlights. */
+/* Visual identity of the film — "the engineering drawing that comes alive".
+   Warm drafting paper, ink line work, hatched section faces, low-chroma hardware, and strict functional
+   colour: cerulean = air/intake, vermilion = combustion/pressure/force, amber = fuel. Annotation is ink;
+   vermilion doubles as the single brand accent (figure numbers, rules). */
 export const PALETTE = {
-  // backdrop: slate gradient with a soft radial key glow behind the subject
-  bg0: '#020617', bg1: '#0F172A', bgGlow: '#1E293B',
-  ink: '#F8FAFC', muted: '#94A3B8', faint: '#64748B', line: 'rgba(248,250,252,.14)',
-  gold: '#FFD600', brass: '#FFD600', section: '#5B6573',
-  glass: 'rgba(15,23,42,.42)', glassEdge: 'rgba(248,250,252,.14)',
-  flow: { air: '#00E5FF', fuel: '#FFAB00', comp: '#9d8dff', power: '#FF6D00', exhaust: '#9aa3ad', oil: '#d08a3c', brass: '#FFD600', section: '#5B6573' },
+  paper: '#F1EEE7', paperEdge: '#E2DDD3', grid: '#23211E',
+  ink: '#23211E', muted: '#6B665E', faint: '#9A948A', line: 'rgba(35,33,30,.16)',
+  accent: '#E4502A', section: '#E2BD73', hatch: '#3A2E1C',
+  flow: { air: '#1D8FD6', fuel: '#E3A21A', comp: '#6E5BD0', power: '#E4502A', exhaust: '#8C857E', oil: '#B8742B', brass: '#B7862F', section: '#E2BD73' },
 };
+/** Barlow Condensed for display and callouts (engineering-drawing feel), Barlow for reading text. */
 export const TYPE = {
-  display: "'Inter', 'SF Pro Display', sans-serif",
-  text: "'Inter', 'SF Pro Display', sans-serif",
+  display: "'Barlow Condensed', 'Barlow', sans-serif",
+  text: "'Barlow', sans-serif",
 };
-/** Film-specific materials [colour, metalness, roughness]: matte graphite housings, brushed-steel moving parts. */
-export const LOOK: Record<string, [string, number, number]> = {
-  block: ['#4a5058', .35, .62], head: ['#555b63', .4, .56], liner: ['#8a9199', .7, .34], gasket: ['#3a3f46', .6, .5],
-  cover: ['#24282e', .55, .42], pan: ['#383d44', .5, .52], intake: ['#262a30', .25, .55], filter: ['#1b1e22', .1, .8],
-  piston: ['#d4d9de', .85, .26], rod: ['#a3abb4', .92, .24], crank: ['#b9c0c7', .95, .2], camshaft: ['#a8b0b8', .92, .24],
-  intakevalve: ['#d6dce2', .9, .22], exhaustvalve: ['#b09a86', .8, .32], flywheel: ['#4d535b', .85, .3], exhaust: ['#6d625a', .6, .5],
-};
-/** Studio light rig, camera-relative (degrees around the camera→subject axis). Colour temperatures:
-    key ≈ 4500 K warm neutral, fill ≈ 6500 K cool, rim = crisp white backlight. */
+/** Studio light rig, camera-relative (degrees around the camera→subject axis): a soft, bright
+    illustration setup — broad warm key high on the left, generous cool fill, gentle rim. */
 export const RIG = {
-  key: { color: '#FFDBBA', intensity: 1.55, az: 38, el: 52 },
-  fill: { color: '#E6EEFF', intensity: .32, az: -62, el: 12 },
-  rim: { color: '#FFFFFF', intensity: 2.4, az: 158, el: 38 },
-  ambient: .08, env: .55,
+  key: { color: '#FFF1E0', intensity: 1.45, az: 42, el: 55 },
+  fill: { color: '#E8EEF8', intensity: .36, az: -65, el: 18 },
+  rim: { color: '#FFFFFF', intensity: .8, az: 160, el: 40 },
+  ambient: .26, env: .7,
 };
+/** Ink line work: outline (silhouettes, part boundaries, section outlines) and crease strength. */
+export const INK = { outline: .88, crease: .42, idScale: 2 };
 export const FPS = 30;
 export const SIZE = { w: 1920, h: 1080 };
 /** Safe margins for graphics (title-safe ≈ 5%). */
-export const SAFE = { x: 110, y: 72 };
+export const SAFE = { x: 120, y: 84 };
 /** Convert a 35 mm-equivalent focal length to the camera's vertical field of view (24 mm sensor height). */
 export const mmToFov = (mm: number) => 2 * Math.atan(12 / mm) * 180 / Math.PI;

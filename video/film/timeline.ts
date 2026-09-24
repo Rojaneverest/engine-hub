@@ -14,15 +14,18 @@ export type ThetaKey = { t: TimeRef; run?: boolean; hold?: boolean; theta?: numb
 /** Camera key. `mm` = 35 mm-equivalent focal length (preferred over `fov`); `dof` = depth-of-field strength
     (max blur in px at infinity, 0 = deep focus); `focus` = what stays sharp (anchor / point / distance; default: target). */
 export type CamKey = { t: TimeRef; az: number; pol: number; rad: number; target: [number, number, number] | string; fov?: number; mm?: number;
-  dof?: number; focus?: string | [number, number, number] | number; ease?: Ease };
-/** Per-shot lighting / post cues (tracks): AO strength, bloom strength, key / fill / rim multipliers. */
-export type LookSpec = { ao?: Track; bloom?: Track; key?: Track; fill?: Track; rim?: Track };
+  dof?: number; focus?: string | [number, number, number] | number; ease?: Ease;
+  /** lens shift: moves the subject across the frame without re-aiming, as fractions of frame width / height (+x right, +y up) */
+  shift?: [number, number] };
+/** Per-shot lighting / post cues (tracks): AO strength, bloom strength, key / fill / rim multipliers,
+    shade (0 = pure ink line drawing on paper, 1 = fully shaded), grid (drafting dots), ink (line-work strength). */
+export type LookSpec = { ao?: Track; bloom?: Track; key?: Track; fill?: Track; rim?: Track; shade?: Track; grid?: Track; ink?: Track };
 export type Line = { id: string; text: string; cue?: string; cueEnd?: string; pause?: number };
 export type Overlay = { type: string; from: TimeRef; to?: TimeRef; [k: string]: any };
 export type EngineSpec = {
   explode?: Track | Record<string, Track>; cut?: Track; xray?: Track; slice?: { z: number; amount: Track };
   focusCyl?: number; focus?: Track; flow?: string; flowAmt?: Track; flowDim?: Track;
-  charge?: { cyl: number; amount: Track };
+  charge?: { cyl: number; amount: Track }; gas?: Track;   // gas: in-cylinder gas volumes (film default 0 — shown only where narrated)
   fade?: Record<string, Track>; glow?: { part: string; cyl?: number; color?: string; amount: Track }[];
 };
 export type Shot = {
@@ -36,7 +39,7 @@ export type Manifest = { voice?: string; lines?: Record<string, { dur: number; f
 export type RLine = { id: string; text: string; start: number; end: number; file?: string };
 export type RShot = Shot & { index: number; start: number; dur: number; cueT: Record<string, number>; lineT: RLine[];
   thetaKeys: { t: number; theta: number; m: number }[]; thetaAfter: number; theta0: number; eng: any };
-export type GCamKey = { gt: number; az: number; pol: number; rad: number; fov: number; dof: number; target: any; focus: any };
+export type GCamKey = { gt: number; az: number; pol: number; rad: number; fov: number; dof: number; target: any; focus: any; sx: number; sy: number };
 export type Film = { shots: RShot[]; dur: number; frames: number; lines: RLine[]; cam: GCamKey[] };
 
 /* ---------- easing & tracks ---------- */
@@ -86,7 +89,7 @@ export function buildFilm(storyboard: Shot[], manifest: Manifest): Film {
   // One continuous camera path for the whole film: keys from every shot on a single global timeline.
   const cam: GCamKey[] = [];
   for (const s of shots) for (const k of s.camera) {
-    const g = { gt: s.start + T(s, k.t), az: k.az, pol: k.pol, rad: k.rad, fov: k.mm ? mmToFov(k.mm) : (k.fov ?? 30), dof: k.dof ?? 0, target: k.target, focus: k.focus ?? null };
+    const g = { gt: s.start + T(s, k.t), az: k.az, pol: k.pol, rad: k.rad, fov: k.mm ? mmToFov(k.mm) : (k.fov ?? 30), dof: k.dof ?? 0, target: k.target, focus: k.focus ?? null, sx: k.shift?.[0] ?? 0, sy: k.shift?.[1] ?? 0 };
     const last = cam[cam.length - 1]; if (last && g.gt - last.gt < 1e-3) cam[cam.length - 1] = g; else cam.push(g);
   }
   return { shots, dur: start, frames: Math.round(start * FPS), lines: all, cam };
@@ -115,7 +118,7 @@ export function cameraAt(film: Film, gt: number, driftAmt = 1) {
   const arr = K.every(k => Array.isArray(k.target));
   const target = arr ? [0, 1, 2].map(j => ch(k => (k.target as number[])[j])) : null;
   const dr = drift(gt, driftAmt);
-  return { az: ch(k => k.az) + dr.az, pol: ch(k => k.pol) + dr.pol, rad: ch(k => k.rad) * dr.rad, fov: ch(k => k.fov), dof: Math.max(0, ch(k => k.dof)),
+  return { az: ch(k => k.az) + dr.az, pol: ch(k => k.pol) + dr.pol, rad: ch(k => k.rad) * dr.rad, fov: ch(k => k.fov), dof: Math.max(0, ch(k => k.dof)), shift: [ch(k => k.sx), ch(k => k.sy)] as [number, number],
     target, ta: a.target, tb: b.target, u: ease(u), fa: a.focus, fb: b.focus };
 }
 
@@ -166,7 +169,7 @@ export function thetaAt(s: RShot, t: number) {
 /* ---------- evaluating one frame ---------- */
 export type FrameState = {
   shot: RShot; t: number; gt: number; frame: number; theta: number;
-  engine: any; cam: ReturnType<typeof cameraAt>; look: { ao: number; bloom: number; key: number; fill: number; rim: number };
+  engine: any; cam: ReturnType<typeof cameraAt>; look: { ao: number; bloom: number; key: number; fill: number; rim: number; shade: number; grid: number; ink: number };
   overlays: { ov: Overlay; t: number; alpha: number; from: number; to: number }[];
   dip: number; exposure: number; floorDrop: number; line?: RLine;
 };
@@ -182,13 +185,14 @@ export function evaluate(film: Film, frame: number): FrameState {
     theta, explode, cut: track(s, E.cut, t), xray: track(s, E.xray, t),
     slice: E.slice ? { z: E.slice.z, amount: track(s, E.slice.amount, t) } : null,
     focusCyl: E.focusCyl, focus: track(s, E.focus, t), flow: E.flow ?? 'off', flowAmt: track(s, E.flowAmt, t, 1), flowDim: track(s, E.flowDim, t, 0),
-    charge: E.charge ? { cyl: E.charge.cyl, amount: track(s, E.charge.amount, t) } : null,
+    charge: E.charge ? { cyl: E.charge.cyl, amount: track(s, E.charge.amount, t) } : null, gas: track(s, E.gas, t, 0),
     fade, glow: (E.glow ?? []).map(g => ({ part: g.part, cyl: g.cyl, color: g.color, amount: track(s, g.amount, t) })).filter(g => g.amount > .001),
   };
   // camera
   const cam = cameraAt(film, gt, s.drift ?? 1);
   const Lk = s.look ?? {};
-  const look = { ao: track(s, Lk.ao, t, 1), bloom: track(s, Lk.bloom, t, .45), key: track(s, Lk.key, t, 1), fill: track(s, Lk.fill, t, 1), rim: track(s, Lk.rim, t, 1) };
+  const look = { ao: track(s, Lk.ao, t, 1), bloom: track(s, Lk.bloom, t, .2), key: track(s, Lk.key, t, 1), fill: track(s, Lk.fill, t, 1), rim: track(s, Lk.rim, t, 1),
+    shade: track(s, Lk.shade, t, 1), grid: track(s, Lk.grid, t, 1), ink: track(s, Lk.ink, t, 1) };
   // overlays
   const overlays = (s.overlays ?? []).map(ov => { const from = T(s, ov.from), to = ov.to != null ? T(s, ov.to) : s.dur; const f = ov.fade ?? .45;
     return { ov, t: t - from, from, to, alpha: clamp(Math.min((t - from) / f, (to - t) / f), 0, 1) }; }).filter(o => o.t >= -.001 && t <= o.to);
@@ -223,7 +227,7 @@ export function soundEvents(film: Film) {
     if (Array.isArray(E.cut)) scan(E.cut, 'cut'); if (E.slice) scan(E.slice.amount, 'slice');
     for (const ov of s.overlays ?? []) { const t0 = s.start + T(s, ov.from);
       if (ov.type === 'label') ev.push({ type: 'tick', t: t0 }); else if (ov.type === 'title' || ov.type === 'endCard') ev.push({ type: 'hit', t: t0 });
-      else if (ov.type === 'chain') for (const it of ov.items) ev.push({ type: 'tick', t: s.start + T(s, it.at) }); }
+      else if (ov.type === 'chain' || ov.type === 'callouts') for (const it of ov.items) ev.push({ type: 'tick', t: s.start + T(s, it.at) }); }
     for (let t = 0; t < s.dur; t += .1) ev.push({ type: 'amb', t: s.start + t, v: track(s, s.audio?.ambience, t, .4) });
   }
   return ev.sort((x, y) => x.t - y.t);

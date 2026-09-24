@@ -6,7 +6,7 @@
     "build:app": "node scripts/build-app.mjs",
     "studio": "remotion studio video/index.ts",
     "tts": "python3 audio/tts.py",
-    "audio": "node scripts/export-timeline.mjs && python3 audio/mix.py",
+    "audio": "tsx scripts/export-timeline.ts && python3 audio/mix.py",
     "render": "node scripts/render.mjs",
     "render:preview": "node scripts/render.mjs --preview",
     "film": "npm run tts && npm run audio && node scripts/render.mjs --all"

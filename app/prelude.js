@@ -4,6 +4,7 @@ import { DEG, mod, clamp, lerp, smooth, G, pistonS, dsdphi, sweptFrac, intakeLif
   deriveEngine, cylTorque, gasTorque, VT, PHASES } from '../../src/core/sim';
 import { PARTS_INFO, ARCHS, ARCH_ORDER } from '../../src/core/content';
 import { createEngine, relatedSet } from '../../src/engine3d/engine';
+import { InkIds, INK_GLSL } from '../../src/engine3d/ink';
 const S = { arch:'single', theta:0, playing:false, speed:.5, view:'full', explode:false, explodeT:0, flow:'off',
   sel:null, hover:null, isolate:false, hidden:new Set(), focusCyl:0, follow:false, level:'simple', hintDone:false };
 let renderer, scene, camera, EN=null, env=null;

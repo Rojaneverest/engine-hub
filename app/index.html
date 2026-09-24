@@ -9,27 +9,30 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#e6e9ed; --bg2:#dce0e5; --panel:rgba(248,249,251,.9); --panel-solid:#f6f7f9;
-  --line:rgba(24,32,44,.12); --line2:rgba(24,32,44,.24); --text:#17202a; --muted:#566271; --faint:#8a94a1;
-  --brass:#8f6a25; --brass-soft:rgba(143,106,37,.13); --scene:#dde2e7; --section:#b0574a;
-  --air:#1f8fd0; --fuel:#b08400; --exhaust:#7a7166; --oil:#a4621f; --power:#e0521f; --comp:#6c5bd6; --coolant:#139a85;
+  --bg:#efebe3; --bg2:#e5e0d6; --panel:rgba(250,248,244,.9); --panel-solid:#faf8f4;
+  --line:rgba(35,33,30,.12); --line2:rgba(35,33,30,.24); --text:#23211e; --muted:#6b665e; --faint:#9a948a;
+  --brass:#99691c; --brass-soft:rgba(153,105,28,.13); --scene:#f1eee7; --scene-edge:#e2ddd3; --section:#e2bd73;
+  --ink:#23211e; --hatch:#3a2e1c; --grid-dot:rgba(35,33,30,.13);
+  --air:#1d8fd6; --fuel:#c98e0e; --exhaust:#8c857e; --oil:#b8742b; --power:#e4502a; --comp:#6e5bd0; --coolant:#139a85;
   --font:'Barlow',system-ui,-apple-system,'Segoe UI',sans-serif;
   --cond:'Barlow Condensed','Barlow',system-ui,sans-serif;
   --r:10px; --shadow:0 10px 30px rgba(10,16,24,.12);
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#11151a; --bg2:#171c22; --panel:rgba(21,26,32,.86); --panel-solid:#192027;
-    --line:rgba(255,255,255,.08); --line2:rgba(255,255,255,.17); --text:#e3e7eb; --muted:#9aa4af; --faint:#67717c;
-    --brass:#d8b56e; --brass-soft:rgba(216,181,110,.13); --scene:#12161b; --section:#9b4a3e;
+    --bg:#15130f; --bg2:#1d1a16; --panel:rgba(29,26,22,.88); --panel-solid:#211e19;
+    --line:rgba(255,248,235,.08); --line2:rgba(255,248,235,.17); --text:#ece6da; --muted:#a39b8e; --faint:#6f685d;
+    --brass:#d8b56e; --brass-soft:rgba(216,181,110,.13); --scene:#1b1814; --scene-edge:#12100d; --section:#a8874a;
+    --ink:#efe8da; --hatch:#f6ecd6; --grid-dot:rgba(255,248,235,.07);
     --air:#5ec3f5; --fuel:#f0c94a; --exhaust:#aba297; --oil:#d08a3c; --power:#ff6b3b; --comp:#9d8dff; --coolant:#3bd3b4;
     --shadow:0 12px 34px rgba(0,0,0,.45);
   }
 }
 :root[data-theme="dark"]{
-  --bg:#11151a; --bg2:#171c22; --panel:rgba(21,26,32,.86); --panel-solid:#192027;
-  --line:rgba(255,255,255,.08); --line2:rgba(255,255,255,.17); --text:#e3e7eb; --muted:#9aa4af; --faint:#67717c;
-  --brass:#d8b56e; --brass-soft:rgba(216,181,110,.13); --scene:#12161b; --section:#9b4a3e;
+  --bg:#15130f; --bg2:#1d1a16; --panel:rgba(29,26,22,.88); --panel-solid:#211e19;
+  --line:rgba(255,248,235,.08); --line2:rgba(255,248,235,.17); --text:#ece6da; --muted:#a39b8e; --faint:#6f685d;
+  --brass:#d8b56e; --brass-soft:rgba(216,181,110,.13); --scene:#1b1814; --scene-edge:#12100d; --section:#a8874a;
+  --ink:#efe8da; --hatch:#f6ecd6; --grid-dot:rgba(255,248,235,.07);
   --air:#5ec3f5; --fuel:#f0c94a; --exhaust:#aba297; --oil:#d08a3c; --power:#ff6b3b; --comp:#9d8dff; --coolant:#3bd3b4;
   --shadow:0 12px 34px rgba(0,0,0,.45);
 }
@@ -60,7 +63,7 @@ button{font:inherit;color:inherit}
 /* stage */
 .view{position:relative;min-height:0;overflow:hidden}
 .view[hidden]{display:none}
-#stage{position:absolute;inset:0}
+#stage{position:absolute;inset:0;background:radial-gradient(circle,var(--grid-dot) 1.1px,transparent 1.6px) 0 0/28px 28px,radial-gradient(ellipse 80% 75% at 50% 46%,var(--scene) 45%,var(--scene-edge) 100%)}
 #gl{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
 #gl.dragging{cursor:grabbing}
 #gl.hovering{cursor:pointer}

@@ -37,7 +37,9 @@ await renderMedia({ ...common, composition: comp, codec: 'h264', outputLocation:
 // attach the caption track as soft subtitles for the full film
 if (flag('all') && fs.existsSync('out/captions.srt')) {
   const tmp = out.replace('.mp4', '.subs.mp4');
-  execFileSync('ffmpeg', ['-y', '-v', 'error', '-i', out, '-i', 'out/captions.srt', '-map', '0', '-map', '1', '-c', 'copy', '-c:s', 'mov_text', '-metadata:s:s:0', 'language=eng', tmp]);
-  fs.renameSync(tmp, out);
+  try {
+    execFileSync('ffmpeg', ['-y', '-v', 'error', '-i', out, '-i', 'out/captions.srt', '-map', '0', '-map', '1', '-c', 'copy', '-c:s', 'mov_text', '-metadata:s:s:0', 'language=eng', tmp]);
+    fs.renameSync(tmp, out);
+  } catch (e) { console.warn('ffmpeg not available — skipped the soft-subtitle track (' + (e.code || e.message) + ')'); }
 }
 console.log('wrote', out, `in ${((Date.now() - t0) / 1000).toFixed(0)} s`);
