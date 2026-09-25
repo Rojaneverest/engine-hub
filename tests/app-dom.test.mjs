@@ -13,6 +13,7 @@ initRenderer=()=>{ if(globalThis.graphicsFail)throw Error('test graphics unavail
 applyTheme=()=>{}; resize=()=>{};
 try {boot();}`)+`
 globalThis.appTest={S,D,E,SOUND,notebook,LESSONS,LAB,labUpdate,engineState,currentScene,restoreScene,captureExploration,advanceEngine,updateEngineLabels,updateEngineInspector,updateCamera,CAM,get model(){return EN;},get camera(){return camera;}};`;
+fs.mkdirSync('app/.build',{recursive:true}); // the app's imports resolve from here, as in scripts/build-app.mjs; it is git-ignored, so a fresh checkout lacks it
 const bundled=await build({stdin:{contents:mocked,resolveDir:process.cwd()+'/app/.build',sourcefile:'test-app.js'},bundle:true,format:'iife',write:false,logLevel:'silent'});
 
 function app({stored=null,storageFails=false,reducedMotion=false,graphicsFail=false,audio=false,sound=null}={}){
