@@ -1,0 +1,159 @@
+/* The Engine owns its layout: scene, inspector and shared transport never overlap.
+   One control system everywhere: 32px controls, 6px radius, 1px border, 14px text. */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+:root{--ctl-h:32px;--ctl-r:6px;--seg-on:#faf8f4}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--seg-on:#40392f}}
+:root[data-theme="dark"]{--seg-on:#40392f}
+.top .tabs button[aria-selected="true"]{background:var(--seg-on)}
+
+/* ---- shared controls ---- */
+#engineView .btn,.top .btn{height:var(--ctl-h);min-height:var(--ctl-h);padding:0 12px;font:500 14px var(--font);border-radius:var(--ctl-r);justify-content:center}
+#engineView .btn.sm{height:28px;min-height:28px;padding:0 10px;font-size:13px}
+#engineView .btn.icon{width:var(--ctl-h);padding:0;font:italic 600 15px Georgia,serif;color:var(--muted)}
+#engineView .btn.icon:hover{color:var(--text)}
+.select{appearance:none;-webkit-appearance:none;height:var(--ctl-h);font:500 14px var(--font);color:var(--text);border:1px solid var(--line2);border-radius:var(--ctl-r);padding:0 30px 0 11px;cursor:pointer;
+  background:var(--panel-solid) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23857e73' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 11px center}
+.select:hover{border-color:var(--brass)}
+.segmented{display:inline-flex;height:var(--ctl-h);padding:2px;gap:2px;border:1px solid var(--line2);border-radius:var(--ctl-r);background:var(--bg2)}
+.segmented>button{border:0;background:none;border-radius:4px;padding:0 11px;font:500 14px var(--font);color:var(--muted);cursor:pointer;white-space:nowrap}
+.segmented>button:hover{color:var(--text)}
+.segmented>button[aria-checked=true]{background:var(--seg-on);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.14)}
+.segmented.sm{height:28px}.segmented.sm>button{padding:0 8px;font-size:13px;min-width:28px}
+.btn.toggle[aria-pressed=true]{background:var(--brass-soft);border-color:var(--brass);color:var(--text)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border:1px solid var(--line2);border-radius:14px;background:var(--panel-solid);font:500 13px var(--font);color:var(--text);cursor:pointer;white-space:nowrap}
+.chip:hover{border-color:var(--brass)}.chip[aria-pressed=true],.chip[aria-checked=true]{background:var(--brass-soft);border-color:var(--brass)}
+.chip i{width:9px;height:9px;border-radius:50%;background:var(--c,var(--faint));flex-shrink:0}
+.popover{position:relative}.popover>summary{list-style:none;cursor:pointer}.popover>summary::-webkit-details-marker{display:none}
+.popover-body{position:absolute;right:0;top:calc(100% + 6px);width:300px;max-height:calc(100dvh - 90px);overflow:auto;padding:12px;background:var(--panel-solid);border:1px solid var(--line2);border-radius:8px;box-shadow:var(--shadow);z-index:40}
+
+/* ---- theme toggle and dialog actions ---- */
+.top .theme-toggle{width:var(--ctl-h);padding:0;color:var(--muted)}.top .theme-toggle:hover{color:var(--text)}
+.theme-toggle svg{width:17px;height:17px}.theme-toggle .icon-sun{display:none}
+.theme-toggle[aria-pressed=true] .icon-sun{display:block}.theme-toggle[aria-pressed=true] .icon-moon{display:none}
+.dialog-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:22px}
+.link-btn{border:0;background:none;padding:4px 0;font:500 13px var(--font);color:var(--muted);cursor:pointer;text-decoration:underline;text-underline-offset:3px}.link-btn:hover{color:var(--text)}
+.path-foot{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}.path-foot .small{font-size:12px;color:var(--muted)}
+/* ---- learning path (top bar) ---- */
+.path-pill{gap:10px!important}.path-pill>span:first-child{font-weight:600}
+.path-dots{display:inline-flex;gap:3px}.path-dots i{width:7px;height:7px;border-radius:50%;border:1px solid var(--brass);box-sizing:border-box}.path-dots i.done{background:var(--brass)}.path-dots i.next{box-shadow:0 0 0 2px var(--brass-soft)}
+#pathCount{font-size:12px;color:var(--muted)}
+.path-body{width:340px}.path-body h2{font:600 20px var(--cond);margin:0 0 2px}.path-body>p{margin:0 0 10px;font-size:13px;color:var(--muted)}
+.path-steps{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:2px}
+.path-step{display:grid;grid-template-columns:24px 1fr auto;align-items:center;gap:8px;width:100%;padding:7px 8px;border:0;border-radius:6px;background:none;text-align:left;cursor:pointer;font:14px var(--font);color:var(--text)}
+.path-step:hover{background:var(--bg2)}.path-step[aria-current=step]{background:var(--brass-soft)}
+.path-step .num{width:22px;height:22px;border-radius:50%;border:1px solid var(--line2);display:grid;place-items:center;font-size:12px;color:var(--muted)}
+.path-step.done .num{background:var(--brass);border-color:var(--brass);color:var(--panel-solid)}
+.path-step small{color:var(--muted);font-size:12px}
+.path-body .btn.primary{width:100%}
+
+/* ---- engine page grid ---- */
+#engineView{display:grid;grid-template-columns:minmax(0,1fr) 360px;grid-template-rows:auto minmax(200px,1fr) auto;overflow:hidden;background:var(--bg);font-size:14px}
+#engineSceneHeader{grid-column:1;grid-row:1;display:flex;flex-wrap:wrap;align-items:center;gap:8px;row-gap:6px;padding:8px 12px;border-bottom:1px solid var(--line);min-width:0}
+.tool-group{display:flex;gap:4px;align-items:center}#sceneArchitecture{width:178px}
+.tool-end{margin-left:auto}
+.inline-range{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);height:var(--ctl-h);padding:0 4px 0 10px;border-left:1px solid var(--line)}
+.inline-range input{width:96px;min-width:48px}.inline-range output{min-width:34px;font-variant-numeric:tabular-nums;color:var(--text)}
+
+/* ---- stage ---- */
+#engineView #stage{position:relative;inset:auto;grid-column:1;grid-row:2;min-width:0;min-height:200px;background:radial-gradient(circle,color-mix(in srgb,var(--grid-dot) 45%,transparent) .8px,transparent 1px) 0 0/28px 28px,radial-gradient(ellipse at 50% 46%,var(--scene),var(--scene-edge))}
+#engineLabels{position:absolute;inset:0;pointer-events:none;overflow:hidden}#engineLabels svg{width:100%;height:100%;display:block}#engineLabels path{stroke:var(--brass);stroke-width:1;fill:none}#engineLabels circle{fill:var(--brass)}#engineLabels rect{fill:var(--panel-solid)}#engineLabels text{fill:var(--muted);font:13px var(--font)}
+#tip{position:absolute;pointer-events:none;max-width:220px;padding:5px 8px;border:1px solid var(--line);border-radius:5px;background:var(--panel-solid);font-size:12px;z-index:2}#tip small{display:block;color:var(--muted)}
+#sceneState{position:absolute;left:12px;right:12px;top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;z-index:3;pointer-events:none}
+#sceneState>*{pointer-events:auto}
+.state-title{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+#stateChips{display:flex;flex-wrap:wrap;gap:6px}
+.state-chip{display:inline-flex;align-items:center;height:28px;border:1px solid var(--line2);border-radius:14px;background:var(--panel-solid);box-shadow:0 1px 3px rgba(0,0,0,.08);font:500 13px var(--font);overflow:hidden}
+.state-chip>span{display:inline-flex;align-items:center;gap:6px;padding:0 4px 0 11px;white-space:nowrap}
+.state-chip i{width:9px;height:9px;border-radius:50%;background:var(--c,var(--brass))}
+.state-chip button{border:0;background:none;height:100%;width:28px;cursor:pointer;color:var(--muted);font-size:15px;line-height:1}
+.state-chip button:hover{color:var(--text);background:var(--bg2)}
+.state-chip.lesson{border-color:var(--brass);background:var(--brass-soft)}
+.chip-clear{border:0;background:none;font:600 13px var(--font);color:var(--brass);cursor:pointer;padding:4px 6px;border-radius:4px}.chip-clear:hover{background:var(--brass-soft)}
+#cameraControls{position:absolute;right:12px;bottom:12px;display:flex;align-items:center;gap:2px;padding:3px;background:var(--panel-solid);border:1px solid var(--line2);border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.08);z-index:3}
+.cam-btn{height:28px;padding:0 9px;border:0;border-radius:5px;background:none;font:500 13px var(--font);color:var(--muted);cursor:pointer}
+.cam-btn:hover{color:var(--text);background:var(--bg2)}.cam-btn[aria-pressed=true]{color:var(--text);background:var(--brass-soft)}
+.cam-sep{width:1px;height:18px;background:var(--line2);margin:0 3px}
+#engineSceneStatus{position:absolute;left:50%;bottom:14px;transform:translate(-50%,6px);max-width:min(520px,60%);padding:7px 14px;border-radius:8px;background:var(--text);color:var(--panel-solid);font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:4}
+#engineSceneStatus.show{opacity:1;transform:translate(-50%,0)}
+#engineSceneStatus:empty{display:none}
+#exitFocus{position:absolute;right:14px;top:14px;z-index:3}
+
+/* ---- inspector ---- */
+#engineInspector{grid-column:2;grid-row:1/4;display:flex;flex-direction:column;min-height:0;overflow:hidden;border-left:1px solid var(--line2);background:var(--panel-solid)}
+.inspector-heading{display:flex;align-items:center;gap:4px;padding:8px 10px;border-bottom:1px solid var(--line);flex-shrink:0;min-height:49px}
+#inspectorTabs{display:flex;flex:1;gap:2px}#inspectorTabs button{border:0;background:none;border-radius:var(--ctl-r);padding:0 12px;height:var(--ctl-h);cursor:pointer;font:500 14px var(--font);color:var(--muted)}#inspectorTabs button:hover{color:var(--text)}#inspectorTabs button[aria-selected=true]{background:var(--brass-soft);color:var(--text)}
+#inspectorCollapse{margin-left:auto;color:var(--muted)}
+#inspectorContent{padding:16px;overflow:auto;overscroll-behavior:contain;flex:1;min-height:0}
+#inspectorContent h2{font:600 24px/1.1 var(--cond);margin:14px 0 8px}#inspectorContent h3{font:600 12px var(--font);color:var(--muted);margin:22px 0 8px;text-transform:uppercase;letter-spacing:.06em}#inspectorContent p{margin:10px 0;line-height:1.55}
+.field-label,.section-label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:0 0 8px;text-transform:uppercase;letter-spacing:.06em}
+.part-row{display:flex;align-items:baseline;gap:8px;width:100%;background:none;border:0;border-bottom:1px solid var(--line);padding:9px 2px;text-align:left;cursor:pointer;white-space:normal;font:14px var(--font);color:var(--text)}.part-row:hover{color:var(--brass)}.part-row>span{flex:1}.part-row small{color:var(--muted);font-size:12px}
+.part-row .seen{width:7px;height:7px;border-radius:50%;background:var(--brass);flex-shrink:0;align-self:center}.part-row .unseen{width:7px;height:7px;flex-shrink:0}
+.part-actions{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0}
+.scope-toggle{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--muted)}.engine-live{display:block;padding:10px 12px;background:var(--bg2);border-left:2px solid var(--brass);font-size:13px;line-height:1.5;margin:14px 0}.engine-live .btn{display:flex;width:fit-content;margin-top:8px}.more-detail{border-top:1px solid var(--line);padding-top:12px;margin-top:18px}.more-detail summary{cursor:pointer;font-weight:500}.related-parts{display:flex;flex-wrap:wrap;gap:6px}
+.flow-route{list-style:none;padding:0;margin:16px 0;display:grid;gap:4px}.flow-route .btn{width:100%;justify-content:flex-start!important;white-space:normal;text-align:left}.flow-route span{color:var(--brass);min-width:20px}.flow-route .btn[aria-pressed=true]{background:var(--brass-soft);border-color:var(--brass)}
+.guide-card{border:1px solid var(--line2);border-radius:8px;padding:12px;margin:0 0 16px;background:var(--bg)}
+.guide-card .eyebrow{font-size:11px}.guide-card h4{font:600 19px/1.15 var(--cond);margin:4px 0 6px}.guide-card p{font-size:13px;color:var(--muted);margin:0 0 10px!important}
+.guide-card .chips{margin-bottom:6px}.guide-card .chip[data-done=true]{border-color:var(--brass);background:var(--brass-soft)}.guide-card .chip[data-done=true]::before{content:"✓";color:var(--brass);font-weight:700}
+.guide-progress{font-size:12px;color:var(--brass);font-weight:600}
+#benchPlot{margin:6px 0 0}#benchGraph{width:100%;height:auto;display:block;touch-action:none;cursor:ew-resize}
+
+/* ---- lesson session: header and actions stay in view ---- */
+#inspectorContent.lesson-mode{padding:0;display:flex;flex-direction:column;overflow:hidden}
+.lesson-head{padding:14px 16px 12px;border-bottom:1px solid var(--line);flex-shrink:0}
+.lesson-header{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.lesson-head h2{margin:6px 0 8px!important}
+.lesson-steps{display:flex;gap:6px;margin:0!important;font-size:12px;color:var(--muted)}
+.lesson-steps span{display:inline-flex;align-items:center;gap:5px;padding:3px 8px 3px 4px;border-radius:12px;background:var(--bg2);text-transform:capitalize}
+.lesson-steps span b{display:grid;place-items:center;width:16px;height:16px;border-radius:50%;background:var(--line2);color:var(--panel-solid);font-size:10px}
+.lesson-steps [aria-current] {background:var(--brass-soft);color:var(--text);font-weight:600}.lesson-steps [aria-current] b{background:var(--brass)}
+.lesson-steps .done b{background:var(--brass)}
+#lessonProgress{font-size:13px;color:var(--brass);font-weight:600;margin:10px 0 0!important}
+.lesson-body{flex:1;min-height:0;overflow:auto;padding:4px 16px 16px}
+.lesson-foot{flex-shrink:0;display:flex;gap:8px;justify-content:space-between;padding:12px 16px;border-top:1px solid var(--line);background:var(--panel-solid)}
+.lesson-foot .btn.primary{margin-left:auto}
+
+/* ---- transport ---- */
+#transport{grid-column:1;grid-row:3;border-top:1px solid var(--line2);padding:10px 16px 8px;background:var(--panel-solid)}
+.transport-controls{display:flex;flex-wrap:wrap;gap:16px;row-gap:6px;align-items:center}
+.field{display:flex;align-items:center;gap:8px}.field .field-label{margin:0}.field-note{font-size:12px;color:var(--muted)}
+#speedField{gap:10px}.rpm-track{width:230px;display:flex;flex-direction:column}#engineRpm{width:100%;margin:0;accent-color:var(--brass)}
+.rpm-zones{display:flex;font-size:10.5px;line-height:1.2;color:var(--faint);margin:1px 7px 0}.rpm-zones span{padding-top:2px;border-top:2px solid var(--brass);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rpm-zones span:first-child{width:var(--split,30%);flex:none;padding-right:4px}.rpm-zones span:last-child{flex:1;border-top:2px dashed var(--line2);padding-left:4px}
+#engineRpmValue{min-width:68px;font-weight:600;font-variant-numeric:tabular-nums}#speedField.real #engineRpmValue{color:var(--brass)}
+#soundSyncNote{display:flex;align-items:center;gap:8px;margin:8px 0 0;padding:4px 4px 4px 10px;border-left:2px solid var(--brass);background:var(--brass-soft);border-radius:0 6px 6px 0;font-size:12.5px;color:var(--muted)}#soundSyncNote .btn{margin-left:auto}
+/* The readout changes every frame, so its width is fixed by the layout (room for angle and stroke; event names may truncate): it must never wrap the row and resize the stage. */
+#engineCycleReadout{flex:1 1 0;min-width:128px;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-left:auto;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}#engineCycleReadout small{font-weight:500;color:var(--brass);margin-left:6px}
+#playBtn{min-width:72px}
+.timeline-wrap{position:relative;margin-top:10px;padding-top:14px}
+#timelineMarkers{position:absolute;left:8px;right:8px;top:0;height:14px}
+.tl-mark{position:absolute;top:0;width:12px;height:14px;margin-left:-6px;border:0;padding:0;background:none;cursor:pointer}
+.tl-mark::before{content:"";position:absolute;left:5px;top:2px;width:2px;height:10px;border-radius:1px;background:var(--faint)}
+.tl-mark:hover::before,.tl-mark:focus-visible::before{background:var(--brass)}
+.tl-mark:hover::after,.tl-mark:focus-visible::after{content:attr(data-name);position:absolute;bottom:17px;left:50%;transform:translateX(-50%);white-space:nowrap;padding:3px 7px;border-radius:5px;background:var(--text);color:var(--panel-solid);font:500 12px var(--font);z-index:5}
+.tl-mark.stop::before{left:1px;top:1px;width:10px;height:10px;border-radius:50%;background:var(--panel-solid);border:2px solid var(--brass);box-sizing:border-box}
+.tl-mark.stop.visited::before{background:var(--brass)}
+#timeline{display:block;width:100%;height:20px;margin:0;cursor:ew-resize}
+.stroke-labels{display:grid;grid-template-columns:repeat(4,1fr);font-size:11px;text-align:center;gap:2px;margin:4px 8px 0}.stroke-labels span{border-top:3px solid var(--air);padding-top:3px;color:var(--muted)}.stroke-labels span:nth-child(2){border-color:var(--comp)}.stroke-labels span:nth-child(3){border-color:var(--power)}.stroke-labels span:nth-child(4){border-color:var(--exhaust)}
+
+/* ---- engine sound ---- */
+.sound-field{gap:2px}#soundToggle{min-width:118px;gap:6px;justify-content:flex-start;padding:0 10px}#soundToggle svg{width:17px;height:17px;flex-shrink:0}
+#soundToggle .icon-on,#soundToggle[aria-pressed=true] .icon-off{display:none}#soundToggle[aria-pressed=true] .icon-on{display:block}
+.sound-more{width:28px;padding:0!important;color:var(--muted)}.sound-more svg{width:11px;height:8px}
+.popover.up .popover-body{top:auto;bottom:calc(100% + 8px);left:auto;right:0}
+.sound-body{width:320px;display:grid;gap:8px}.sound-body h3{font:600 18px var(--cond);margin:0}.sound-body .section-label{margin:0}.sound-body .segmented{justify-self:start}.sound-body p{margin:0}
+.sound-row{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}.sound-row output{color:var(--text);font-weight:600}
+.sound-body input[type=range]{width:100%}
+.sound-meter{height:4px;border-radius:2px;background:var(--bg2);overflow:hidden}.sound-meter i{display:block;height:100%;background:var(--brass);transform-origin:left;transform:scaleX(0);transition:transform .08s linear}
+.sound-tune{border-top:1px solid var(--line);padding-top:8px;display:grid;gap:4px}.sound-tune h3{font:600 14px var(--font)!important}.sound-tune label{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+/* ---- collapsed inspector and focus view ---- */
+#engineView.inspector-collapsed{grid-template-columns:minmax(0,1fr)}#inspectorReopen{position:absolute;right:12px;top:58px;z-index:5;box-shadow:var(--shadow)}#sheetSize{display:none}
+#engineView.focus-view{grid-template-columns:1fr;grid-template-rows:minmax(200px,1fr) auto}#engineView.focus-view #engineInspector,#engineView.focus-view #engineSceneHeader,#engineView.focus-view #inspectorReopen,#engineView.focus-view #sceneState{display:none}#engineView.focus-view #stage{grid-row:1}#engineView.focus-view #transport{grid-row:2}
+
+#engineDialog{width:min(680px,calc(100vw - 32px));max-height:calc(100dvh - 32px);padding:24px;border:1px solid var(--line2);border-radius:12px;color:var(--text);background:var(--panel-solid);box-shadow:var(--shadow);overflow:auto}#engineDialog::backdrop{background:rgba(0,0,0,.4)}#closeDialog{float:right;position:sticky;top:0}#engineDialog h2{font:600 28px var(--cond);margin:0 70px 16px 0}#engineDialog h3{margin-top:26px}#engineDialog p{line-height:1.6}#engineDialog input{margin-top:12px}.layout-facts{display:grid;grid-template-columns:120px 1fr;gap:10px}.layout-facts dt{color:var(--muted)}.layout-facts dd{margin:0}
+.engine-unavailable > :not(#stage){display:none!important}.engine-unavailable #stage{grid-column:1/-1!important;grid-row:1/-1!important}
+
+/* Narrow desktop windows: shorten secondary labels before anything wraps. */
+@media(max-width:1800px){.rpm-track{width:170px}#firingOrder{display:none}#cylinderLabel{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}}
+@media(max-width:1280px){#engineView{grid-template-columns:minmax(0,1fr) 330px}#sceneArchitecture{width:156px}.inline-range{gap:6px;padding-left:8px}.inline-range input{width:64px}.inline-range output{min-width:30px}#engineSceneHeader{gap:6px}.segmented>button{padding:0 9px}.field-note{display:none}.rpm-track{width:180px}}
+@media(max-width:1200px){.inline-range output{display:none}.inline-range input{width:56px}.transport-controls{gap:10px}#soundToggle{min-width:0;padding:0 8px}#soundLabel{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}}
+@media(prefers-reduced-motion:reduce){#engineSceneStatus{transition:none}}

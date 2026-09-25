@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600&display=swap" rel="stylesheet">
+<script>try{var t=localStorage.getItem('engine-lab-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;}catch(e){}</script>
 <style>
 :root{
   --bg:#efebe3; --bg2:#e5e0d6; --panel:rgba(250,248,244,.9); --panel-solid:#faf8f4;
@@ -46,11 +47,11 @@ button{font:inherit;color:inherit}
 .app{height:100%;display:grid;grid-template-rows:auto 1fr;min-height:0}
 
 /* top bar */
-.top{display:flex;align-items:center;gap:18px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--bg);position:relative;z-index:30}
+.top{display:flex;align-items:center;gap:14px;padding:4px 12px;border-bottom:1px solid var(--line);background:var(--bg);position:relative;z-index:30}
 .brand{display:flex;align-items:center;gap:10px;font-family:var(--cond);font-weight:600;font-size:21px;letter-spacing:.2px;white-space:nowrap}
 .brand svg{width:26px;height:26px;color:var(--brass)}
 .tabs{display:flex;gap:2px;background:var(--bg2);border:1px solid var(--line);border-radius:9px;padding:3px}
-.tabs button{border:0;background:none;padding:5px 14px;border-radius:6px;color:var(--muted);cursor:pointer;font-weight:500}
+.tabs button{border:0;background:none;padding:3px 12px;border-radius:6px;color:var(--muted);cursor:pointer;font-weight:500}
 .tabs button[aria-selected="true"]{background:var(--panel-solid);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.15)}
 .top .spacer{flex:1}
 .btn{border:1px solid var(--line2);background:var(--panel-solid);border-radius:8px;padding:6px 12px;cursor:pointer;font-weight:500;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
@@ -69,154 +70,7 @@ button{font:inherit;color:inherit}
 #gl.hovering{cursor:pointer}
 .panel{background:var(--panel);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
 
-.archbar{position:absolute;left:14px;top:14px;z-index:5;display:flex;flex-direction:column;gap:8px;max-width:calc(100% - 28px)}
-.seg{display:flex;flex-wrap:wrap;gap:2px;padding:3px}
-.seg button{border:0;background:none;padding:6px 11px;border-radius:7px;cursor:pointer;color:var(--muted);font-weight:500;font-size:14px;white-space:nowrap}
-.seg button:hover{color:var(--text)}
-.seg button[aria-pressed="true"]{background:var(--brass-soft);color:var(--text);box-shadow:inset 0 0 0 1px var(--brass)}
-.archline{display:flex;align-items:center;gap:10px;padding:0 4px;color:var(--muted);font-size:14px;flex-wrap:wrap}
-.archline b{color:var(--text);font-weight:600}
-.link{background:none;border:0;padding:0;color:var(--brass);cursor:pointer;font-weight:500;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
-
-.now{position:absolute;left:14px;top:118px;width:300px;z-index:4;padding:14px 16px 12px;max-height:calc(100% - 118px - 80px);overflow:auto}
-.now .angle{display:flex;align-items:baseline;gap:12px}
-.now .big{font-family:var(--cond);font-weight:600;font-size:44px;line-height:1;letter-spacing:-.5px}
-.now .big small{font-size:22px;color:var(--muted);font-weight:500}
-.now .sub{color:var(--muted);font-size:13.5px;line-height:1.3}
-.phase{display:inline-flex;align-items:center;gap:8px;margin:10px 0 6px;font-family:var(--cond);font-size:22px;font-weight:600}
-.phase i{width:10px;height:10px;border-radius:50%;background:currentColor;display:inline-block}
-.now ul{margin:4px 0 8px;padding:0 0 0 16px;font-size:14px;color:var(--text)}
-.now li{margin:3px 0}
-.gauge{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted)}
-.gauge .bar{flex:1;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
-.gauge .bar span{display:block;height:100%;background:var(--power);width:0}
-.now .collapse{position:absolute;right:8px;top:8px;border:0;background:none;color:var(--brass);cursor:pointer;font-size:13px;font-weight:500}
-.now.min ul,.now.min .gauge,.now.min .note,.now.min .sub{display:none}
-.now.min{width:auto;display:flex;align-items:center;gap:12px;padding:6px 10px 6px 14px}
-.now.min .big{font-size:26px}
-.now.min .phase{margin:0;font-size:18px}
-.now.min .collapse{position:static;order:3;padding:4px 6px;border-left:1px solid var(--line);margin-left:2px}
-.note{font-size:12px;color:var(--faint);margin-top:6px}
-
-.tools{position:absolute;right:14px;top:14px;z-index:5;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
-.tools .row{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;padding:5px}
-.flowrow button .dot{width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--c,var(--muted))}
-.hiddenpill{font-size:13px}
-#flowsBtn .dot{width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--c,var(--muted))}
-
-.info{position:absolute;right:14px;top:66px;bottom:74px;width:370px;z-index:6;display:flex;flex-direction:column;overflow:hidden}
-.info[hidden]{display:none}
-.info header{padding:14px 16px 10px;border-bottom:1px solid var(--line)}
-.info h2{margin:0;font-family:var(--cond);font-weight:600;font-size:28px;line-height:1.05}
-.info .tag{display:inline-block;margin-top:6px;font-size:12.5px;color:var(--muted);border:1px solid var(--line2);border-radius:20px;padding:1px 9px}
-.info .acts{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
-.info .close{position:absolute;right:10px;top:10px;border:0;background:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;padding:4px 6px}
-.info .body{padding:12px 16px 18px;overflow:auto}
-.levels{display:flex;gap:2px;background:var(--bg2);border-radius:8px;padding:3px;margin-bottom:10px}
-.levels button{flex:1;border:0;background:none;border-radius:6px;padding:5px 4px;color:var(--muted);cursor:pointer;font-size:13.5px;font-weight:500}
-.levels button[aria-pressed="true"]{background:var(--panel-solid);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.15)}
-.info .lead{font-size:15.5px;margin:0 0 12px}
-.info h3{font-size:13px;font-weight:600;color:var(--brass);margin:14px 0 4px}
-.info p{margin:0 0 8px;font-size:14.5px}
-.chips{display:flex;flex-wrap:wrap;gap:6px}
-.chip{border:1px solid var(--line2);background:none;border-radius:20px;padding:3px 10px;font-size:13px;cursor:pointer}
-.chip:hover{border-color:var(--brass);color:var(--brass)}
-.hint{position:absolute;right:14px;top:66px;width:300px;z-index:4;padding:12px 30px 12px 14px;font-size:14px;color:var(--muted)}
-.hintx{position:absolute;right:6px;top:6px;border:0;background:none;color:var(--muted);font-size:18px;line-height:1;cursor:pointer;padding:2px 6px}
-#engineView.flowsopen .info,#engineView.flowsopen .hint{top:114px}
-#engineView.tfull .info{bottom:196px}
-#engineView.tfull .tour{bottom:200px}
-#engineView.tfull .now{max-height:calc(100% - 118px - 200px)}
-.cleanexit{position:absolute;right:14px;top:14px;z-index:6;display:none;opacity:.75}
-.cleanexit:hover{opacity:1}
-#engineView.clean .archbar,#engineView.clean .now,#engineView.clean .tools,#engineView.clean .hint,#engineView.clean .info,#engineView.clean .tour{display:none!important}
-#engineView.clean .cleanexit{display:inline-flex}
-#engineView.clean .transport{opacity:.55;transition:opacity .2s}
-#engineView.clean .transport:hover,#engineView.clean .transport:focus-within{opacity:1}
-.hint b{color:var(--text)}
-
-.tip{position:absolute;z-index:8;pointer-events:none;padding:5px 9px;font-size:13px;border-radius:7px;background:var(--panel-solid);border:1px solid var(--line2);box-shadow:var(--shadow);white-space:nowrap;transform:translate(14px,-50%)}
-.tip small{color:var(--muted);margin-left:6px}
-
-/* transport */
-.transport{position:absolute;left:14px;right:14px;bottom:14px;z-index:5;padding:10px 14px 10px;display:grid;grid-template-columns:auto 1fr auto;gap:6px 16px;align-items:center}
-.transport .expand{align-self:start}
-.transport .expand svg{transform:rotate(180deg);transition:transform .2s}
-.transport.compact .expand svg{transform:none}
-.transport .spd{display:none;min-width:48px;justify-content:center}
-.transport.compact{left:50%;right:auto;transform:translateX(-50%);width:min(760px,calc(100% - 28px));padding:6px 8px 6px 10px;gap:0 12px}
-.transport.compact .speeds,.transport.compact .rate,.transport.compact .cylrow,.transport.compact .powerpath{display:none}
-.transport.compact .spd{display:inline-flex}
-.transport.compact .expand{align-self:center}
-.transport.compact .icon{width:30px;height:30px}
-.transport.compact .icon.play{width:36px;height:36px}
-.transport.compact #timeline{height:30px}
-.ctrl{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.icon{width:34px;height:34px;border-radius:8px;border:1px solid var(--line2);background:var(--panel-solid);display:grid;place-items:center;cursor:pointer;padding:0}
-.icon:hover{border-color:var(--brass)}
-.icon svg{width:16px;height:16px}
-.icon.play{width:42px;height:42px;background:var(--brass);border-color:var(--brass);color:#16110a}
-.speeds{display:flex;gap:1px;background:var(--bg2);border-radius:7px;padding:2px;margin-left:4px}
-.speeds button{border:0;background:none;padding:4px 7px;border-radius:5px;font-size:13px;color:var(--muted);cursor:pointer}
-.speeds button[aria-pressed="true"]{background:var(--panel-solid);color:var(--text)}
-.rate{font-size:12px;color:var(--faint);margin-left:6px;white-space:nowrap}
-#timeline{width:100%;height:96px;display:block;touch-action:none;cursor:ew-resize;user-select:none}
-.cylrow{grid-column:1/-1;display:flex;align-items:center;gap:14px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:8px}
-.cyls{display:flex;gap:4px;flex-wrap:wrap}
-.cyl{border:1px solid var(--line2);background:none;border-radius:7px;padding:3px 8px 3px 6px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;min-width:84px}
-.cyl i{width:4px;align-self:stretch;border-radius:2px;background:var(--c)}
-.cyl b{font-weight:600}
-.cyl span{color:var(--muted)}
-.cyl[aria-pressed="true"]{border-color:var(--brass);background:var(--brass-soft)}
-.firing{font-size:14px;color:var(--muted);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.firing .n{display:inline-grid;place-items:center;min-width:22px;height:22px;border-radius:11px;border:1px solid var(--line2);font-weight:600;color:var(--text);font-size:12.5px;transition:background .15s}
-.firing .n.on{background:var(--power);border-color:var(--power);color:#1a0d06}
-.firing .ar{color:var(--faint)}
-.powerpath{grid-column:1/-1;font-size:13.5px;color:var(--muted);display:none;gap:6px;align-items:center;flex-wrap:wrap}
-.powerpath b{color:var(--power);font-weight:600}
-.powerpath.on{display:flex}
-
-/* drawer */
-.drawer{position:absolute;left:0;top:0;bottom:0;width:min(640px,100%);z-index:20;background:var(--panel-solid);border-right:1px solid var(--line);box-shadow:var(--shadow);overflow:auto;padding:22px 26px 40px;transform:translateX(-102%);transition:transform .35s cubic-bezier(.2,.7,.2,1)}
-.drawer.open{transform:none}
-.drawer h2{font-family:var(--cond);font-size:38px;line-height:1;margin:0 0 6px;font-weight:600}
-.drawer .lede{font-size:17px;color:var(--muted);margin:0 0 18px;max-width:60ch}
-.drawer h3{font-size:14px;color:var(--brass);font-weight:600;margin:24px 0 8px}
-.facts{display:grid;grid-template-columns:150px 1fr;border-top:1px solid var(--line)}
-.facts div{padding:7px 0;border-bottom:1px solid var(--line);font-size:14.5px}
-.facts div:nth-child(odd){color:var(--muted)}
-.qa details{border-bottom:1px solid var(--line);padding:8px 0}
-.qa summary{cursor:pointer;font-weight:600;font-size:15px}
-.qa p{margin:6px 0 2px;color:var(--text);font-size:14.5px;max-width:64ch}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-.two ul{margin:0;padding-left:18px;font-size:14.5px}
-.two li{margin:4px 0}
-.ex{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:8px 0}
-.ex b{font-size:16px}
-.ex .spec{color:var(--muted);font-size:13.5px;margin:2px 0 6px}
-.ex p{margin:0;font-size:14.5px}
-.drawer .x{position:sticky;top:0;float:right;border:0;background:none;font-size:24px;color:var(--muted);cursor:pointer}
-.small{font-size:12.5px;color:var(--faint)}
-#smooth{width:100%;height:190px;display:block}
-.cmp{display:flex;gap:5px;flex-wrap:wrap;margin:6px 0}
-
-/* intro */
-.intro{position:absolute;inset:0;z-index:40;display:grid;place-items:center;background:color-mix(in srgb,var(--bg) 55%,transparent);backdrop-filter:blur(3px)}
-.intro[hidden]{display:none}
-.intro .card{max-width:560px;padding:30px 32px;margin:16px}
-.intro h1{font-family:var(--cond);font-size:54px;line-height:.95;margin:0 0 12px;font-weight:600;letter-spacing:-.5px}
-.intro p{font-size:17px;color:var(--muted);margin:0 0 20px;max-width:46ch}
-.intro .row{display:flex;gap:10px;flex-wrap:wrap}
-.keys{margin-top:18px;font-size:13px;color:var(--faint)}
-
-/* tour */
-.tour{position:absolute;left:330px;bottom:76px;width:340px;z-index:12;padding:14px 16px}
-.tour[hidden]{display:none}
-.tour .step{font-size:12.5px;color:var(--brass);font-weight:600}
-.tour h4{margin:2px 0 6px;font-family:var(--cond);font-size:24px;font-weight:600}
-.tour p{margin:0 0 12px;font-size:14.5px}
-.tour .row{display:flex;gap:6px;justify-content:space-between}
-
+.small{font-size:12.5px;color:var(--muted)}
 /* lab */
 #lab{overflow:auto}
 .labwrap{max-width:1180px;margin:0 auto;padding:28px 22px 60px}
@@ -242,37 +96,8 @@ input[type=range]{width:100%;accent-color:var(--brass)}
 .legend i{display:inline-block;width:14px;height:3px;border-radius:2px;background:var(--c);vertical-align:middle;margin-right:5px}
 .approx{font-size:12.5px;color:var(--faint);margin-top:8px}
 
-@media (max-width: 980px){
-  .now{top:auto;bottom:68px;left:10px;width:auto;max-width:300px;max-height:40%}
-  #engineView.tfull .now{bottom:228px}
-  .info{left:10px;right:10px;top:auto;bottom:10px;width:auto;height:58%;z-index:15}
-  .hint{display:none}
-  .tour{left:auto;right:10px;top:112px;bottom:auto}
-  .tools{right:10px}
-  .archbar{left:10px}
-}
-@media (max-width: 700px){
-  .top{gap:10px;padding:8px 10px}
-  .brand span{display:none}
-  .archbar{top:10px}
-  .tools{top:auto;bottom:62px;right:10px;left:10px;align-items:stretch}
-  #engineView.tfull .tools{bottom:212px}
-  .transport.compact{width:calc(100% - 16px)}
-  .tools .row{justify-content:flex-start;flex-wrap:nowrap;overflow-x:auto}
-  .now{bottom:auto;top:92px;max-width:260px}
-  #engineView.tfull .now{bottom:auto}
-  .now:not(.min){padding:10px 12px}
-  .now .big{font-size:32px}
-  .transport{left:8px;right:8px;bottom:8px;grid-template-columns:1fr;padding:8px 10px}
-  #timeline{height:78px}
-  .rate{display:none}
-  .tour{left:8px;right:8px;width:auto;bottom:auto;top:92px}
-  .exp{grid-template-columns:1fr}
-  .two{grid-template-columns:1fr}
-  .facts{grid-template-columns:120px 1fr}
-  .intro h1{font-size:42px}
-}
-@media (prefers-reduced-motion: reduce){ .drawer{transition:none} }
+@media(max-width:700px){.top{gap:10px;padding:4px 10px}.brand span{display:none}.exp{grid-template-columns:1fr}}
+/* DISCOVERY_STYLES */
 </style>
 </head>
 <body>
@@ -283,111 +108,49 @@ input[type=range]{width:100%;accent-color:var(--brass)}
       <span>Engine Lab</span>
     </div>
     <nav class="tabs" role="tablist">
-      <button role="tab" aria-selected="true" data-tab="engine">Engine</button>
+      <button role="tab" aria-selected="true" data-tab="discover">Discover</button>
+      <button role="tab" aria-selected="false" data-tab="engine">Engine</button>
       <button role="tab" aria-selected="false" data-tab="lab">Lab</button>
     </nav>
     <div class="spacer"></div>
-    <button class="btn sm" id="cleanBtn" aria-pressed="false" title="Hide all controls (H)">Clean view</button>
-    <button class="btn sm" id="tourBtn">Guided tour</button>
+    <button class="btn theme-toggle" id="themeToggle" aria-pressed="false" aria-label="Switch to dark mode" title="Switch to dark mode"><svg class="icon-moon" viewBox="0 0 20 20" aria-hidden="true"><path d="M16.5 12.6A7 7 0 0 1 7.4 3.5a7 7 0 1 0 9.1 9.1Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg><svg class="icon-sun" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="3.6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 1.8v2.4M10 15.8v2.4M1.8 10h2.4M15.8 10h2.4M4.2 4.2l1.7 1.7M14.1 14.1l1.7 1.7M4.2 15.8l1.7-1.7M14.1 5.9l1.7-1.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+    <details class="popover" id="pathMenu"><summary class="btn path-pill" id="pathButton"><span>Learning path</span><span class="path-dots" id="pathDots" aria-hidden="true"></span><span id="pathCount"></span></summary><div class="popover-body path-body" id="pathBody"></div></details>
   </header>
 
-  <main class="view" id="engineView">
-    <div id="stage"><canvas id="gl" aria-label="Interactive 3D engine. Drag to rotate, scroll to zoom, click a part to learn about it."></canvas></div>
-
-    <div class="archbar">
-      <div class="panel seg" id="archSeg" role="group" aria-label="Engine layout"></div>
-      <div class="archline" id="archLine"></div>
-    </div>
-
-    <section class="panel now min" id="now" aria-live="off">
-      <button class="collapse" id="nowMin" aria-expanded="false">Explain</button>
-      <div class="angle"><div class="big" id="nowAngle">0°</div><div class="sub" id="nowSub"></div></div>
-      <div class="phase" id="nowPhase"><i></i><span></span></div>
-      <ul id="nowList"></ul>
-      <div class="gauge"><span>Cylinder pressure</span><div class="bar"><span id="pbar"></span></div><span id="pval"></span></div>
-      <div class="note">Pressure and timing are an educational approximation of a gasoline engine at full throttle.</div>
-    </section>
-
-    <div class="tools">
-      <div class="panel row" role="group" aria-label="View">
-        <button class="btn sm" data-view="full" aria-pressed="true">Full</button>
-        <button class="btn sm" data-view="cutaway" aria-pressed="false">Cutaway</button>
-        <button class="btn sm" data-view="xray" aria-pressed="false">X-ray</button>
-        <button class="btn sm" id="explodeBtn" aria-pressed="false">Explode</button>
-        <button class="btn sm" id="followBtn" aria-pressed="false">Follow piston</button>
-        <button class="btn sm" id="flowsBtn" aria-expanded="false"><span class="dot" id="flowsDot"></span><span id="flowsLbl">Flows</span></button>
-        <button class="btn sm ghost" id="resetView">Reset view</button>
-      </div>
-      <div class="panel row flowrow" id="flowRow" role="group" aria-label="Flows" hidden>
-        <button class="btn sm" data-flow="off" aria-pressed="true">No flow</button>
-        <button class="btn sm" data-flow="air" aria-pressed="false" style="--c:var(--air)"><span class="dot"></span>Air</button>
-        <button class="btn sm" data-flow="fuel" aria-pressed="false" style="--c:var(--fuel)"><span class="dot"></span>Fuel</button>
-        <button class="btn sm" data-flow="exhaust" aria-pressed="false" style="--c:var(--exhaust)"><span class="dot"></span>Exhaust</button>
-        <button class="btn sm" data-flow="oil" aria-pressed="false" style="--c:var(--oil)"><span class="dot"></span>Oil</button>
-        <button class="btn sm" data-flow="power" aria-pressed="false" style="--c:var(--power)"><span class="dot"></span>Power</button>
-      </div>
-      <button class="btn sm hiddenpill" id="showAll" hidden>Show hidden parts</button>
-    </div>
-
-    <div class="panel hint" id="hint"><button class="hintx" id="hintX" aria-label="Dismiss">×</button><b>Click any part</b> to see what it does and why it exists. Drag to rotate, right-drag or shift-drag to pan, scroll to zoom. Double-click to zoom to a point.</div>
-
-    <aside class="panel info" id="info" hidden aria-live="polite">
-      <header>
-        <button class="close" id="infoClose" aria-label="Close">×</button>
-        <h2 id="infoTitle"></h2>
-        <span class="tag" id="infoTag"></span>
-        <div class="acts">
-          <button class="btn sm" id="isoBtn" aria-pressed="false">Isolate</button>
-          <button class="btn sm" id="hideBtn">Hide</button>
-          <button class="btn sm" id="focusBtn">Zoom to it</button>
-        </div>
-      </header>
-      <div class="body" id="infoBody"></div>
-    </aside>
-
-    <div class="tip" id="tip" hidden></div>
-
-    <section class="panel transport compact" id="transport" aria-label="Simulation controls">
-      <div class="ctrl">
-        <button class="icon" id="stepBack" aria-label="Step back 10°"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h2v12H3zM14 2v12L6 8z"/></svg></button>
-        <button class="icon play" id="playBtn" aria-label="Play"><svg viewBox="0 0 16 16" fill="currentColor" id="playIcon"><path d="M4 2l10 6-10 6z"/></svg></button>
-        <button class="icon" id="stepFwd" aria-label="Step forward 10°"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M11 2h2v12h-2zM2 2v12l8-6z"/></svg></button>
-        <div class="speeds" id="speeds" role="group" aria-label="Speed"></div>
-        <button class="btn sm spd" id="spdBtn" title="Change speed"></button>
-        <span class="rate" id="rate"></span>
-      </div>
-      <svg id="timeline" aria-label="Four-stroke timeline. Drag to scrub through the cycle."></svg>
-      <button class="icon expand" id="tExpand" aria-expanded="false" aria-label="Show full timeline"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10l5-5 5 5"/></svg></button>
-      <div class="cylrow">
-        <div class="cyls" id="cyls"></div>
-        <div class="firing" id="firing"></div>
-      </div>
-      <div class="powerpath" id="powerpath">Power path: <b>combustion</b>→ piston → connecting rod → crankshaft → flywheel → gearbox → driveshaft → differential → wheels</div>
-    </section>
-
-    <div class="panel tour" id="tour" hidden>
-      <div class="step" id="tourStep"></div>
-      <h4 id="tourTitle"></h4>
-      <p id="tourText"></p>
-      <div class="row"><button class="btn sm ghost" id="tourExit">End tour</button><span><button class="btn sm" id="tourPrev">Back</button> <button class="btn sm primary" id="tourNext">Next</button></span></div>
-    </div>
-
-    <button class="btn sm cleanexit" id="cleanExit">Show controls</button>
-
-    <aside class="drawer" id="drawer" aria-label="About this engine layout"></aside>
-
-    <div class="intro" id="intro">
-      <div class="panel card">
-        <h1>See what actually happens inside an engine.</h1>
-        <p>Rotate it, cut it open, take it apart and slow it down until every stroke, valve and spark makes sense. Then compare how inline, V and flat engines solve the same problem differently.</p>
-        <div class="row">
-          <button class="btn primary" id="startTour">Take the guided tour</button>
-          <button class="btn" id="startFree">Explore on my own</button>
-        </div>
-        <div class="keys">Keyboard shortcuts: Space to play or pause, arrow keys to step, E explode, C cutaway, X x-ray, R reset view, H clean view, T timeline.</div>
-      </div>
-    </div>
+  <main class="view" id="discover"></main>
+  <main class="view engine-page" id="engineView" hidden>
+    <header id="engineSceneHeader" aria-label="Engine controls">
+      <div class="tool-group"><label class="sr-only" for="sceneArchitecture">Engine</label><select id="sceneArchitecture" class="select"></select><button class="btn icon" id="sceneAbout" aria-label="About this engine layout" title="About this layout">i</button></div>
+      <div class="segmented" id="sceneView" role="radiogroup" aria-label="Model view"><button role="radio" data-view="full">Full</button><button role="radio" data-view="cutaway">Cutaway</button><button role="radio" data-view="xray">X-ray</button></div>
+      <button class="btn toggle" id="sceneExplode" aria-pressed="false">Explode</button>
+      <label class="inline-range" id="cutControl" title="How far the section cuts into the engine"><span>Section</span><input id="sceneCut" type="range" min="0" max="100" value="100"><output id="sceneCutValue"></output></label>
+      <label class="inline-range" id="separationControl" title="How far the exploded layers separate"><span>Spread</span><input id="sceneSeparation" type="range" min="0" max="100" value="100"><output id="sceneSeparationValue"></output></label>
+      <div class="tool-group tool-end"><button class="btn" id="sceneSave" title="Save this scene to your notebook">Save</button><button class="btn" id="sceneCopy" title="Copy a link to this scene">Share</button><button class="btn" id="sceneReset" title="Reset engine view, camera and cycle angle">↺ Reset</button></div>
+    </header>
+    <div id="stage"><canvas id="gl" tabindex="0" aria-label="Interactive engine. Drag to rotate, scroll to zoom, select a part. Arrow keys step through the cycle; Shift steps one degree. Escape clears the selection and filters."></canvas><div id="engineLabels" aria-hidden="true"></div><div id="tip" hidden></div>
+      <div id="sceneState" hidden><span class="state-title">Showing</span><div id="stateChips" role="list" aria-label="Active selection and filters"></div><button class="chip-clear" id="clearAll" title="Clear selection and filters (Esc)">Clear all</button></div>
+      <div id="cameraControls" role="group" aria-label="Camera and labels"><button class="cam-btn" id="fitEngine" title="Fit the whole engine">Fit</button><button class="cam-btn" data-camera="front">Front</button><button class="cam-btn" data-camera="side">Side</button><button class="cam-btn" data-camera="top">Top</button><span class="cam-sep"></span><button class="cam-btn" id="sceneLabels" aria-pressed="true" title="Label the selected part">Labels</button><button class="cam-btn" id="focusView" aria-pressed="false" title="Hide the controls around the model">Focus view</button></div>
+      <div id="engineSceneStatus" role="status" aria-live="polite"></div>
+      <button class="btn" id="exitFocus" hidden>Exit focus view</button></div>
+    <aside id="engineInspector" aria-label="Engine inspector"><div class="inspector-heading"><div id="inspectorTabs" role="tablist" aria-label="Explore the engine"><button role="tab" data-inspector="parts" id="partsTab">Parts</button><button role="tab" data-inspector="flow" id="flowTab">Flow</button><button role="tab" data-inspector="charts" id="chartsTab">Charts</button></div><button class="btn" id="sheetSize" aria-label="Expand inspector" aria-expanded="false">↕</button><button class="btn ghost sm" id="inspectorCollapse" title="Hide the side panel">Hide panel</button></div><div id="inspectorContent"></div></aside>
+    <button class="btn" id="inspectorReopen" hidden>Show panel</button>
+    <section id="transport" aria-label="Cycle controls"><div class="transport-controls"><button class="btn" id="playBtn">Play</button>
+      <div class="field" id="speedField"><label class="field-label" for="engineRpm">Speed</label><div class="rpm-track"><input id="engineRpm" type="range" min="0" step="1"><div class="rpm-zones" aria-hidden="true"><span>Model</span><span>Real engine · sound only</span></div></div><output id="engineRpmValue" for="engineRpm"></output></div>
+      <div class="field" id="cylinderControl"><span class="field-label" id="cylinderLabel">Cylinder</span><div class="segmented sm" id="sceneCylinder" role="radiogroup" aria-labelledby="cylinderLabel"></div><span class="field-note" id="firingOrder"></span></div>
+      <div class="field sound-field"><button class="btn toggle" id="soundToggle" aria-pressed="false"><svg class="icon-off" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7.5h3l4-3.5v12l-4-3.5H3z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M13.5 8l4 4m0-4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><svg class="icon-on" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7.5h3l4-3.5v12l-4-3.5H3z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M13 7.2a4 4 0 0 1 0 5.6M15.3 5a7.2 7.2 0 0 1 0 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span id="soundLabel">Sound off</span></button>
+        <details class="popover up" id="soundMenu"><summary class="btn sound-more" aria-label="Sound settings" title="Sound settings"><svg viewBox="0 0 12 8" aria-hidden="true"><path d="M1 6.5 6 1.5l5 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></summary><div class="popover-body sound-body">
+          <h3>Engine sound</h3>
+          <p class="small">Up to 60 rpm the sound follows the model: each event plays as the animation reaches it. Press Play, or scrub the timeline to hear them one at a time.</p>
+          <p class="small">Above 60 rpm you hear a real engine at that speed while the model plays, slowed down and not synced. Compare layouts: the V8’s uneven beat comes from its firing order.</p>
+          <label class="sound-row" for="soundVolume"><span>Volume</span></label><input id="soundVolume" type="range" min="0" max="100">
+          <div class="sound-meter" aria-hidden="true"><i id="soundMeter"></i></div>
+          <p class="small">Synthesised live from the model's own timing, not a recording. Press M to switch sound on or off.</p></div></details></div>
+      <output id="engineCycleReadout"></output></div>
+      <p id="soundSyncNote" role="status" hidden><span id="soundSyncText"></span> <button class="btn sm ghost" id="soundSyncFix">Sync with model (60 rpm)</button></p>
+      <div class="timeline-wrap"><div id="timelineMarkers"></div><label class="sr-only" for="timeline">Selected cylinder cycle angle</label><input type="range" id="timeline" min="0" max="719" step="1" value="120"></div>
+      <div class="stroke-labels"><span>Intake</span><span>Compression</span><span>Power</span><span>Exhaust</span></div></section>
   </main>
+  <dialog id="engineDialog" aria-labelledby="dialogTitle"><button class="btn" id="closeDialog">Close</button><div id="dialogContent"></div></dialog>
 
   <main class="view" id="lab" hidden></main>
 </div>

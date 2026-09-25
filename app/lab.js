@@ -11,9 +11,10 @@ function curveT(cv,rpm){ const k=cv.kn; if(rpm<k[0][0]||rpm>cv.max) return null;
   for(let i=0;i<k.length-1;i++){ const [a,ta]=k[i],[b,tb]=k[i+1]; if(rpm<=b){ const t=(rpm-a)/(b-a); return ta+(tb-ta)*(1-Math.cos(Math.PI*t))/2; } } return k[k.length-1][1]; }
 const kW=(T,rpm)=>T*rpm/9549, HP=kw=>kw/.7457;
 const fmt=(v,d=0)=>v.toLocaleString('en-US',{maximumFractionDigits:d,minimumFractionDigits:d});
-let labBuilt=false, labRAF=null, labA=0, labLast=0;
+let labBuilt=false, labRAF=null, labA=0, labLast=0, labBaseline=null;
 function buildLab(){ labBuilt=true; const L=$('#lab');
-  L.innerHTML=`<div class="labwrap"><h1>Lab</h1><p>Three experiments that turn the numbers on a spec sheet into something you can see. Change a slider and watch what responds.</p>
+  L.innerHTML=`<div class="labwrap"><h1>Lab</h1><p>Three experiments that turn the numbers on a spec sheet into something you can see. These diagrams have their own settings; they do not resize the 3D engine.</p>
+  <section class="lab-compare" aria-label="Experiment comparison"><div class="discovery-actions"><button class="btn sm" id="labSaveBaseline">Save current baseline</button><button class="btn sm" id="labRestoreBaseline" disabled>Restore baseline</button><button class="btn sm" id="labClearBaseline" disabled>Clear comparison</button></div><div id="labComparison" aria-live="polite"><p class="small">Keep a baseline, change one input, and compare what responds. Displacement, piston speed and power are independent experiments.</p></div></section>
   <section class="exp"><div>
     <h2>Displacement</h2>
     <p>Displacement is the volume the pistons sweep as they travel from the top of their stroke (TDC) to the bottom (BDC), added up over every cylinder. \u201c2.0 litres\u201d means all the pistons together sweep two litres.</p>
@@ -44,7 +45,7 @@ function buildLab(){ labBuilt=true; const L=$('#lab');
     <div class="ctl"><label for="tR">Engine speed <b id="tRv"></b></label><input id="tR" type="range" min="1000" max="9000" step="100"></div>
     <div class="readouts"><div class="ro"><span>Power</span><b id="tP"></b></div><div class="ro"><span>Same power at double rpm needs</span><b id="tHalf"></b></div></div>
     <p class="formula">Power (kW) = torque (N\u00b7m) \u00d7 rpm \u00f7 9,549</p>
-    <p class="small">Gearing multiplies torque at the wheels but cannot create power, which is why power ultimately decides top speed and acceleration.</p>
+    <p class="small">Gearing trades wheel speed for wheel torque; it cannot create power. Acceleration also depends on mass, traction, gearing and resistance.</p>
   </div><div class="vis"><svg id="tVis" viewBox="0 0 560 420" role="img" aria-label="Crank with torque arrow and power curves"></svg></div></section>
   <section class="exp" style="grid-template-columns:1fr"><div>
     <h2 style="font-size:24px">Three engine characters</h2>
@@ -59,6 +60,9 @@ function buildLab(){ labBuilt=true; const L=$('#lab');
   document.querySelectorAll('[data-pr]').forEach(b=>b.onclick=()=>{ const [x,y,n]=b.dataset.pr.split(',').map(Number); LAB.bore=x; LAB.stroke=y; LAB.n=n; $('#dB').value=x; $('#dS').value=y; dn.value=NS.indexOf(n); labUpdate(); });
   $('#tLeg').innerHTML=CURVES.map(c=>`<button class="btn sm" data-cv="${c.k}" aria-pressed="true" style="--c:var(${c.color})"><i style="display:inline-block;width:14px;height:3px;background:var(${c.color});border-radius:2px"></i>${c.name}</button>`).join('');
   document.querySelectorAll('[data-cv]').forEach(b=>b.onclick=()=>{ LAB.show[b.dataset.cv]=!LAB.show[b.dataset.cv]; b.setAttribute('aria-pressed',LAB.show[b.dataset.cv]); labUpdate(); });
+  $('#labSaveBaseline').onclick=()=>{labBaseline={...LAB};renderLabComparison();};
+  $('#labRestoreBaseline').onclick=()=>{if(!labBaseline)return;Object.assign(LAB,labBaseline);for(const [id,key] of [['dB','bore'],['dS','stroke'],['rR','rpm'],['rS','rs'],['tT','T'],['tR','trpm']])$('#'+id).value=LAB[key];$('#dN').value=NS.indexOf(LAB.n);labUpdate();};
+  $('#labClearBaseline').onclick=()=>{labBaseline=null;renderLabComparison();};
   labUpdate();
 }
 function labUpdate(){ const D=LAB;
@@ -67,7 +71,7 @@ function labUpdate(){ const D=LAB;
   $('#dBv').textContent=fmt(D.bore,D.bore%1?2:0)+' mm'; $('#dSv').textContent=fmt(D.stroke,D.stroke%1?1:0)+' mm'; $('#dNv').textContent=D.n;
   $('#dPer').innerHTML=fmt(per)+' <small>cc</small>'; $('#dTot').innerHTML=fmt(tot)+' <small>cc \u2248 '+(tot/1000).toFixed(1)+' L</small>'; $('#dRat').textContent=rat.toFixed(2);
   $('#dFor').innerHTML=`Volume = \u03c0/4 \u00d7 bore\u00b2 \u00d7 stroke \u00d7 cylinders<br>= 0.785 \u00d7 ${fmt(D.bore/10,2)}\u00b2 cm \u00d7 ${fmt(D.stroke/10,2)} cm \u00d7 ${D.n} = ${fmt(tot)} cm\u00b3`;
-  $('#dSq').textContent=rat>1.03?'Oversquare (bore larger than stroke): room for bigger valves and shorter piston travel, so it tends to suit high rpm.':rat<.97?'Undersquare (stroke longer than bore): a compact combustion chamber and more leverage per push, typically favouring low-rpm torque and efficiency, but higher piston speed at a given rpm.':'Square (bore \u2248 stroke): a balanced middle ground.';
+  $('#dSq').textContent=rat>1.03?'Oversquare (bore larger than stroke): room for bigger valves and shorter piston travel, so it tends to suit high rpm.':rat<.97?'Undersquare (stroke longer than bore): higher piston speed at a given rpm. Torque also depends on displacement, cylinder pressure and breathing; stroke alone does not determine it.':'Square (bore \u2248 stroke): a balanced middle ground.';
   // rpm
   const s=D.rs/1000, w=D.rpm*2*Math.PI/60, r=s/2, Lr=r*G.L/G.r;
   let pk=0; for(let a=0;a<360;a+=1){ const v=Math.abs(dsdphi(a,r,Lr))*w; if(v>pk) pk=v; }
@@ -79,7 +83,7 @@ function labUpdate(){ const D=LAB;
   // torque/power
   const p=kW(D.T,D.trpm); $('#tTv').textContent=D.T+' N\u00b7m'; $('#tRv').textContent=fmt(D.trpm)+' rpm';
   $('#tP').innerHTML=fmt(p)+' <small>kW ('+fmt(HP(p))+' hp)</small>'; $('#tHalf').innerHTML=fmt(D.T/2)+' <small>N\u00b7m at '+fmt(D.trpm*2)+' rpm</small>';
-  drawDisp(0); drawRpmStatic(); drawCurves(); }
+  drawDisp(0); drawRpmStatic(); drawCurves(); renderLabComparison(); }
 function drawDisp(a){ const D=LAB, sc=2.6, cx=230, top=46, b=D.bore*sc, st=D.stroke*sc, ch=14, tdc=top+ch, bdc=tdc+st;
   const f=sweptFrac(a), py=tdc+f*st, x0=cx-b/2, x1=cx+b/2, n=D.n;
   let s=`<defs><pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="var(--air)" stroke-width="1.2" opacity=".5"/></pattern></defs>`;
@@ -100,15 +104,15 @@ function drawDisp(a){ const D=LAB, sc=2.6, cx=230, top=46, b=D.bore*sc, st=D.str
   s+=`<text x="420" y="${80+Math.ceil(n/4)*72}" font-size="13" fill="var(--text)">${fmt(per*n)} cc total</text>`;
   $('#dVis').innerHTML=s; }
 function drawRpmStatic(){ const D=LAB, s=D.rs/1000, w=D.rpm*2*Math.PI/60, r=s/2, Lr=r*G.L/G.r;
-  const X=a=>40+a/360*490, vmax=30, Y=v=>390-v/vmax*140; let pts='';
+  const X=a=>40+a/360*490, vmax=Math.max(30,Math.ceil(pistonMetrics(D.rpm,D.rs).peak/10)*10), Y=v=>390-v/vmax*140; let pts='';
   for(let a=0;a<=360;a+=3){ const v=Math.abs(dsdphi(a,r,Lr))*w; pts+=(a?'L':'M')+X(a).toFixed(1)+','+Y(Math.min(v,vmax)).toFixed(1); }
   const mean=2*s*D.rpm/60;
   let g=`<line x1="40" x2="530" y1="390" y2="390" stroke="var(--line2)"/><text x="40" y="410" font-size="11" fill="var(--faint)">0\u00b0 TDC</text><text x="${X(180)}" y="410" text-anchor="middle" font-size="11" fill="var(--faint)">180\u00b0 BDC</text><text x="530" y="410" text-anchor="end" font-size="11" fill="var(--faint)">360\u00b0</text>`;
-  for(const v of [10,20,30]) g+=`<line x1="40" x2="530" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="34" y="${Y(v)+4}" text-anchor="end" font-size="11" fill="var(--faint)">${v}</text>`;
+  for(const v of [vmax/3,vmax*2/3,vmax]) g+=`<line x1="40" x2="530" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="34" y="${Y(v)+4}" text-anchor="end" font-size="11" fill="var(--faint)">${fmt(v,0)}</text>`;
   g+=`<text x="40" y="236" font-size="12" fill="var(--muted)">piston speed (m/s) through one revolution</text>`;
   g+=`<path d="${pts}" fill="none" stroke="var(--power)" stroke-width="2.2"/><line x1="40" x2="530" y1="${Y(Math.min(mean,vmax))}" y2="${Y(Math.min(mean,vmax))}" stroke="var(--brass)" stroke-dasharray="5 4"/><text x="528" y="${Y(Math.min(mean,vmax))-5}" text-anchor="end" font-size="11" fill="var(--brass)">mean</text>`;
   g+=`<g id="rAnim"></g>`; $('#rVis').innerHTML=g; }
-function drawRpmAnim(a){ const g=$('#rAnim'); if(!g) return; const D=LAB, sc=90*D.rs/86/2/G.r*G.r; const r=45*D.rs/86, Lr=r*G.L/G.r, cx=150, cy=190;
+function drawRpmAnim(a){ const g=$('#rAnim'); if(!g) return; const D=LAB; const r=25*D.rs/86, Lr=r*G.L/G.r, cx=150, cy=200;
   const p=a*DEG, px=cx+r*Math.sin(p), py=cy-r*Math.cos(p), sy=cy-pistonS(a,r,Lr);
   g.innerHTML=`<rect x="${cx-34}" y="${cy-r-Lr-44}" width="68" height="${2*r+60}" fill="none" stroke="var(--line2)"/>
    <circle cx="${cx}" cy="${cy}" r="${r+10}" fill="none" stroke="var(--line2)"/><line x1="${cx}" y1="${cy}" x2="${px}" y2="${py}" stroke="var(--text)" stroke-width="7" stroke-linecap="round"/>
@@ -143,4 +147,12 @@ function labLoop(now){ if($('#lab').hidden){ labRAF=null; return; } const dt=Mat
   labRAF=requestAnimationFrame(labLoop); }
 function labStart(){ if(!labBuilt) buildLab(); if(!labRAF){ labLast=0; labRAF=requestAnimationFrame(labLoop); } }
 
-boot();
+
+function renderLabComparison(){
+  const el=$('#labComparison');if(!el)return;
+  $('#labRestoreBaseline').disabled=$('#labClearBaseline').disabled=!labBaseline;
+  if(!labBaseline){el.innerHTML='<p class="small">Keep a baseline, change one input, and compare what responds. Displacement, piston speed and power are independent experiments.</p>';return;}
+  const measure=d=>[Math.PI/4*d.bore*d.bore*d.stroke*d.n/1000,2*d.rs/1000*d.rpm/60,kW(d.T,d.trpm)],base=measure(labBaseline),now=measure(LAB);
+  const names=['Displacement','Mean piston speed','Power'],units=['cc','m/s','kW'];
+  el.innerHTML='<div class="readouts">'+now.map((v,i)=>{const delta=v-base[i],digits=i===1?1:0;return `<div class="ro"><span>${names[i]}</span><b>${fmt(v,digits)} <small>${units[i]}</small></b><span>Baseline ${fmt(base[i],digits)} · ${delta>=0?'+':''}${fmt(delta,digits)} ${units[i]}</span></div>`;}).join('')+'</div><p class="small">Baseline saved for this session. Compare one experiment at a time; these settings are independent.</p>';
+}

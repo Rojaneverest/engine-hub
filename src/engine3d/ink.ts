@@ -70,8 +70,12 @@ export class InkIds {
 }
 
 /** GLSL: ink coverage at uv. Needs uniforms tInkId (ID target), tDepth (scene depth), res (output px), inkIdScale, cNear, cFar.
-    Returns vec2(outline, crease) in 0..1. */
+    Returns vec2(outline, crease) in 0..1. Define INK_INNER before it to change how dark part-to-part lines are
+    relative to silhouettes (default .62). */
 export const INK_GLSL = `
+  #ifndef INK_INNER
+  #define INK_INNER .62
+  #endif
   uniform sampler2D tInkId; uniform float inkIdScale;
   float inkViewZ(float d){ float z = d * 2. - 1.; return 2. * cNear * cFar / (cFar + cNear - z * (cFar - cNear)); }
   vec3 inkId(vec2 uv){ return texture2D(tInkId, uv).rgb; }
@@ -96,7 +100,7 @@ export const INK_GLSL = `
       float lap = (abs(wl + wr - 2. * w) + abs(wd + wu - 2. * w)) / w;
       crease = smoothstep(.004, .012, lap);
     }
-    return vec2(max(cov * .62, sil), crease);
+    return vec2(max(cov * INK_INNER, sil), crease);
   }`;
 
 /** GLSL: faint outlines of ghosted parts from an InkIds.renderGhosts target (needs uniforms tGhostId, res, inkIdScale). */

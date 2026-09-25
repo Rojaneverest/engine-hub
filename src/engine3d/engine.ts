@@ -21,7 +21,7 @@ export type EngineState = {
   cut?: number;          // 0..1 cutaway sweep (1 = sliced through the cylinder axes)
   xray?: number;         // 0..1 housing transparency
   flow?: string; flowAmt?: number; flowDim?: number;   // flowDim: how much unrelated parts fade (defaults to flowAmt)
-  fade?: Record<string, number>;                       // per-part opacity multiplier (e.g. hide the timing drive for a shot)
+  fade?: Record<string, number>;                       // per-part opacity multiplier (e.g. hide the timing drive for a shot); 'part|key' fades one finish (e.g. 'timing|chain')
   sel?: string|null; hover?: string|null; isolate?: boolean; pulse?: number;
   hidden?: Set<string>|string[];
   focusCyl?: number; focus?: number;           // dim the other cylinders' moving parts
@@ -146,17 +146,37 @@ function capMaterial(color:THREE.Color){
   m.customProgramCacheKey=()=>'engine-cap';
   return m; }
 
-export function createEngine(key: string, opts: { colors: Colors; rounded?: boolean; shadows?: boolean; dot?: THREE.Texture|null; seed?: number; look?: Record<string,[string,number,number]>;
+/** Softly illustrated fuel spray: dense at the nozzle, fading toward the charge, with a feathered silhouette and faint jet streaks. */
+function softSprayMaterial(color:THREE.Color){
+  const m:any=new THREE.MeshBasicMaterial({color,transparent:true,opacity:.35,depthWrite:false,side:THREE.DoubleSide});
+  m.onBeforeCompile=(sh:any)=>{
+    sh.vertexShader='varying vec3 vSprayN; varying vec3 vSprayV; varying vec3 vSprayP;\n'+sh.vertexShader.replace('#include <project_vertex>',
+      '#include <project_vertex>\n  vSprayN = normalize(normalMatrix * normal); vSprayV = normalize(-mvPosition.xyz); vSprayP = position;');
+    sh.fragmentShader='varying vec3 vSprayN; varying vec3 vSprayV; varying vec3 vSprayP;\n'+sh.fragmentShader.replace('vec4 diffuseColor = vec4( diffuse, opacity );',
+      `vec4 diffuseColor = vec4( diffuse, opacity );
+      float sprayT = clamp(vSprayP.y / .45 + .5, 0., 1.);                                  // 0 at the open end, 1 at the nozzle
+      float sprayRim = smoothstep(.05, .75, abs(dot(normalize(vSprayN), normalize(vSprayV))));
+      float sprayJets = .72 + .28 * sin(atan(vSprayP.z, vSprayP.x) * 9.);
+      diffuseColor.a *= sprayRim * sprayJets * smoothstep(0., .55, sprayT) * (1. - .45 * smoothstep(.8, 1., sprayT)) * 1.6;`); };
+  m.customProgramCacheKey=()=>'engine-soft-spray';
+  return m; }
+
+export function createEngine(key: string, opts: { colors: Colors; rounded?: boolean; shadows?: boolean; dot?: THREE.Texture|null; seed?: number;
+  /** Finish overrides [colour, metalness, roughness] by part, or by 'part|key' for one finish of a part (e.g. 'timing|chain'). */
+  look?: Record<string,[string,number,number]>;
+  /** Close-up detail for interactive viewing: denser spring, ring and chain geometry, rounded chain links, a soft fuel spray. */
+  fine?: boolean;
   particleScale?: number; hatch?: { color?: string; amount?: number; spacing?: number } }) {
   const C: any = {}; for (const k in opts.colors) C[k] = lin((opts.colors as any)[k]);
-  const rounded = opts.rounded !== false, rand = rng(opts.seed ?? 7);
+  const rounded = opts.rounded !== false, fine = !!opts.fine, rand = rng(opts.seed ?? 7);
   const parts = new Map<string, {meshes:THREE.Mesh[]; mats:Set<THREE.Material>; op:number}>();
   const matCache = new Map<string, any>();
   const R: any = { cyl:[], banks:[], twins:[], twinMats:{}, layers:{} as Record<string,THREE.Group[]>, camSprockets:[], links:[], flows:{}, journals:[], anchors:{} };
   const P = (part:string) => { if(!parts.has(part)) parts.set(part,{meshes:[],mats:new Set(),op:1}); return parts.get(part)!; };
   function mat(part:string,key='',o:any={}){ const k=part+'|'+key; if(matCache.has(k)) return matCache.get(k);
-    const [c,m,r]=(opts.look&&opts.look[part])||PART_LOOK[part]; const mt:any=new THREE.MeshStandardMaterial({color:lin(o.color||c),metalness:o.metal??m,roughness:o.rough??r});
-    mt.userData={part,clip:null,clipOn:false,cyl:o.cyl??null}; matCache.set(k,mt); P(part).mats.add(mt); return mt; }
+    const lk=opts.look&&opts.look[k], [c,m,r]=lk||(opts.look&&opts.look[part])||PART_LOOK[part];
+    const mt:any=new THREE.MeshStandardMaterial({color:lin(lk?c:o.color||c),metalness:lk?m:o.metal??m,roughness:lk?r:o.rough??r});
+    mt.userData={part,key,clip:null,clipOn:false,cyl:o.cyl??null}; matCache.set(k,mt); P(part).mats.add(mt); return mt; }
   function mesh(geo:THREE.BufferGeometry,part:string,key:string,parent:THREE.Object3D,x=0,y=0,z=0,o?:any){
     const m=new THREE.Mesh(geo,mat(part,key,o)); m.position.set(x,y,z); m.userData.part=part; if(o&&o.cyl!=null) m.userData.cyl=o.cyl;
     if(opts.shadows){ m.castShadow=true; m.receiveShadow=true; } P(part).meshes.push(m); parent.add(m); return m; }
@@ -241,7 +261,8 @@ export function createEngine(key: string, opts: { colors: Colors; rounded?: bool
   { const disc=new THREE.Shape(); disc.absarc(0,0,.98,0,Math.PI*2,false); disc.holes.push(hole(0,0,.12));
     for(let i=0;i<6;i++){ const a=(i+.5)/6*Math.PI*2; disc.holes.push(hole(.62*Math.cos(a),.62*Math.sin(a),.11)); }
     mesh(slabZ(disc,-.05,.05,.01,40),'flywheel','',fw);
-    mesh(slabZ(gearShape(96,.97,1.05,.94),-.06,.06,0,2),'flywheel','',fw);
+    // curveSegments only affects the bore circle (teeth are straight segments); 2 collapses the bore to a slit
+    mesh(slabZ(gearShape(96,.97,1.05,.94),-.06,.06,0,fine?64:2),'flywheel','',fw);
     for(let i=0;i<6;i++){ const a=i/6*Math.PI*2; mesh(zCyl(.04,.13,12),'flywheel','bolt',fw,.24*Math.cos(a),.24*Math.sin(a),0,{color:'#8c9197'}); }
     mesh(new THREE.BoxGeometry(.05,.1,.12),'flywheel','mark',fw,0,.86,0,{color:'#e8e4dc',metal:.1,rough:.5}); }
   marker('flywheel',fwL,0,.7,e.zmax+.84);
@@ -263,8 +284,8 @@ export function createEngine(key: string, opts: { colors: Colors; rounded?: bool
   addC(circ,0,0,.135); for(const b of R.banks) for(const sd of [1,-1]){ const p=toEng(b,sd*G.valveX,G.camY,0); addC(circ,p.x,p.y,.25); camPts.push(p); }
   const hp=hull2(circ).map((p:any)=>V3(p.x,p.y,zT));
   const chain=R.chainCurve=new THREE.CatmullRomCurve3(hp,true,'centripetal'); R.chainLen=chain.getLength();
-  mesh(new THREE.TubeGeometry(chain,200,.018,6,true),'timing','chain',tmL,0,0,0,{color:'#3c4249'});
-  const lg=new THREE.BoxGeometry(.07,.03,.075); const nL=Math.round(R.chainLen/.12);
+  mesh(new THREE.TubeGeometry(chain,fine?320:200,.018,fine?10:6,true),'timing','chain',tmL,0,0,0,{color:'#3c4249'});
+  const lg=fine?rbox(.07,.03,.075,.012,true):new THREE.BoxGeometry(.07,.03,.075); const nL=Math.round(R.chainLen/.12);
   for(let i=0;i<nL;i++) R.links.push(mesh(lg,'timing','link',tmL,0,0,0,{color:'#8a929b'}));
   marker('timing',tmL,hp[0].x*.5,G.camY*.5,zT);
   const tcL=layer('tcov',root,V3(0,0,-2.6)); mat('tcover','g').userData.clip=gPlane;
@@ -347,18 +368,18 @@ export function createEngine(key: string, opts: { colors: Colors; rounded?: bool
     for(const sd of [is,-is]){ const x=sd*G.valveX, a=zTl, b=bz1-.15;
       mesh(zCyl(.05,b-a,14),'camshaft','',L.cams,x,G.camY,(a+b)/2);
       const sp=new THREE.Group(); sp.position.set(x,G.camY,zTl); L.cams.add(sp); R.camSprockets.push(sp);
-      mesh(slabZ(gearShape(36,.21,.235,.06),-.03,.03,0,2),'timing','',sp); mesh(new THREE.BoxGeometry(.03,.1,.075),'timing','mark',sp,0,.16,0,{color:'#e8e4dc',metal:.1,rough:.5});
+      mesh(slabZ(gearShape(36,.21,.235,.06),-.03,.03,0,fine?16:2),'timing','',sp); mesh(new THREE.BoxGeometry(.03,.1,.075),'timing','mark',sp,0,.16,0,{color:'#e8e4dc',metal:.1,rough:.5});
       // cam bearing caps between the cylinders and at the ends
       const capZ=[bz0+.14,...zs.slice(0,-1).map((z:number,i:number)=>(z+zs[i+1])/2),bz1-.2];
       for(const z of capZ) solid(rbox(.2,G.camY+.07-T,.1,.03,rounded),'head',k,L.cams,x,(T+G.camY+.07)/2,z); }
     mesh(zCyl(.04,bz1-bz0-.2,12),'injector','',L.head,is*.28,G.coverTop+.05,bMid);
-    const springGeo=new THREE.TubeGeometry(new Helix(.075,6),140,.012,6,false), pGeo=pistonGeo(), rG=rodGeos(), lGeo=linerGeo(.75,G.deck);
+    const springGeo=new THREE.TubeGeometry(new Helix(.075,6),fine?300:140,.012,fine?10:6,false), pGeo=pistonGeo(), rG=rodGeos(), lGeo=linerGeo(.75,G.deck);
     const ivL=lobeGeo(IC,intakeLift), evL=lobeGeo(EC,exhaustLift), colX=-is*1.1;
     for(const c of cyls){ const z=c.z, i=e.cyls.indexOf(c), ck='c'+i, co={cyl:i};
       solid(lGeo,'liner',k,L.block,0,0,z);
       const pg=new THREE.Group(); L.pist.add(pg);
       mesh(pGeo,'piston',ck,pg,0,0,0,co);
-      const rg=new THREE.TorusGeometry(G.pistonR-.006,.011,6,48); rg.rotateX(Math.PI/2);
+      const rg=new THREE.TorusGeometry(G.pistonR-.006,.011,fine?10:6,fine?72:48); rg.rotateX(Math.PI/2);
       for(const y of [.175,.13,.083]) mesh(rg,'rings','',pg,0,y,0);
       mesh(zCyl(.07,.62,16),'piston',ck,pg,0,0,0,co);
       marker('piston:'+i,pg,0,G.crown,0); marker('wristpin:'+i,pg,0,0,0);
@@ -388,7 +409,7 @@ export function createEngine(key: string, opts: { colors: Colors; rounded?: bool
       const T0=V3(is*.05,2.16,z-.2), U=V3(is*.28,G.coverTop+.02,z-.2), d=U.clone().sub(T0), len=d.length();
       const ij=new THREE.Group(); ij.position.copy(T0); ij.rotation.z=-Math.asin(d.x/len); L.head.add(ij);
       mesh(yCyl(.028,len-.3,12),'injector','',ij,0,(len-.3)/2,0); mesh(yCyl(.05,.3,16),'injector','',ij,0,len-.15,0);
-      const spray=new THREE.Mesh(new THREE.ConeGeometry(.17,.45,20,1,true),new THREE.MeshBasicMaterial({color:C.fuel,transparent:true,opacity:.35,depthWrite:false,side:THREE.DoubleSide}));
+      const spray=new THREE.Mesh(new THREE.ConeGeometry(.17,.45,fine?40:20,1,true),fine?softSprayMaterial(C.fuel):new THREE.MeshBasicMaterial({color:C.fuel,transparent:true,opacity:.35,depthWrite:false,side:THREE.DoubleSide}));
       spray.position.y=-.225; spray.visible=false; noInk(spray); ij.add(spray);
       const gas=new THREE.Mesh(yCyl(.4,1,40),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.2,depthWrite:false}));
       gas.position.z=z; noInk(gas); bank.add(gas);
@@ -509,6 +530,7 @@ export function createEngine(key: string, opts: { colors: Colors; rounded?: bool
       let pmax=0;
       for(const m of Pp.mats as Set<any>){
         let op=base; if(fA>0&&fc!=null&&m.userData.cyl!=null&&m.userData.cyl!==fc&&PER_CYL.has(part)) op=Math.min(op,lerp(1,.08,fA));
+        const mf=st.fade&&st.fade[part+'|'+m.userData.key]; if(mf!=null) op=Math.min(op,mf);
         m.opacity=op; m.transparent=op<.999; m.depthWrite=op>=.999; pmax=Math.max(pmax,op);
         const want:THREE.Plane[]=[]; if(clipOn&&m.userData.clip) want.push(m.userData.clip); if(sl&&SLICE_PARTS.has(part)) want.push(slicePlane);
         const key=want.length?want.map(q=>planes.indexOf(q)).join(','):''; if(key!==m.userData.clipOn){ m.clippingPlanes=want; m.clipShadows=true; m.userData.clipOn=key; m.needsUpdate=true; } }

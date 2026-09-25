@@ -1,5 +1,40 @@
 # Engine Lab — interactive app + deterministic video pipeline
 
+## Interactive app
+
+Run `npm run build:app`, then open `dist/engine-lab.html` in a WebGL-capable desktop browser. The build is one self-contained HTML file; no server is needed.
+Every push to `main` runs the tests, builds the file and publishes it to GitHub Pages (`.github/workflows/pages.yml`).
+The app opens on **Discover**, with a seven-step learning path, a glossary and a local notebook.
+The **Engine** page has one **Parts / Flow / Charts** inspector and one shared timeline.
+It starts paused at 120° in cutaway view. The app targets desktop; phone layouts are not a goal.
+
+- **Toolbar:** engine picker with an ⓘ About button, Full / Cutaway / X-ray, an Explode toggle, and one contextual slider (Section in Cutaway, Spread while exploded). Save, Share and Reset sit on the right. Only the engine picker is a dropdown, custom-styled so it renders the same in Safari and Chrome; every other choice is a visible segmented control or chip (32px controls, 6px radius).
+- **Showing row:** over the model, one chip per active selection or filter (part, isolation, flow, hidden parts, exploded, section depth, pending event stop, lesson). × undoes one; **Clear all** or **Esc** clears them all but keeps the engine, view, camera and cycle angle. **Reset** restores the whole default scene.
+- **Camera cluster:** Fit, Front, Side, Top, Labels and Focus view at the bottom right of the model.
+- **Transport:** Play, an rpm **Speed** slider, cylinder buttons with the firing order, and a timeline with clickable event markers. During a lesson, the stops to observe appear as rings that fill in once visited.
+- **Parts** uses a searchable list → detail view with Focus, Isolate and Hide. Parts you have already met are marked with a dot.
+- **Flow** and **Charts** use chips (flows carry their colour). Charts shows one larger graph, live values, and an optional exact event stop.
+- **Learning path:** Meet the engine (select the piston, rod, crankshaft, intake valve and camshaft), then the six investigations in teaching order: four strokes → half-speed cam → spark timing → strongest twist → rhythm of power → double the revs. The top-bar **Learning path** button shows progress and continues; the Parts panel shows the next step; a finished lesson offers **Next step**. Every step stays open.
+- Lessons keep their title, progress and actions pinned while the body scrolls. Predict → Explore → Explain; deliberate scrubbing, markers, keyboard steps, graph dragging and completed event stops count as observations; autoplay does not. Exit lesson restores the exploration snapshot.
+- Status messages appear as short toasts over the model.
+- **Engine sound** (transport, off on every load; **M** toggles it). One synthesizer driven by the model's own timing: spark, combustion, exhaust opening, valves seating and intake, per cylinder at its firing offset, with exhaust pulses run through a pipe-and-muffler model per bank (after Baldan et al. 2015). The Speed slider sets both: from 5 to 60 rpm the model turns at that speed and the sound follows it event by event (scrubbing plays what the timeline passes); from 700 to 6,500 rpm the sound is the same engine and firing order at real speed while the model holds 60 rpm, and a note under the transport says the two are not synced. The real-speed engine runs only while the model plays. The cross-plane V8's uneven beat comes from its firing order, not a recording. Volume is remembered. Open the app with `?tune` for a live tuning panel whose values go into `app/audio/tune.js`.
+- The top bar has a light/dark toggle. The choice is remembered in this browser; with no choice made, the app follows the system setting.
+- Learning progress (steps done, parts met) lives only in this browser, with no account. **Reset progress…** in the Learning path menu, or **Reset progress** on Discover, starts the path over after a confirmation; saved scenes and the theme are kept.
+- Saved scenes retain camera, instance, section depth, separation and visibility. Older scene links remain supported. Progress (steps done, parts met) and up to 12 scenes are stored locally; storage failure falls back to the current session.
+- Lab experiments remain independent of the 3D dimensions. WebGL failure leaves Lab and the Discover glossary available.
+
+`app/engine-page.js` owns scene actions, the Showing row, inspector rendering and lesson sessions;
+`app/engine-page.css` owns the control system and layout. `app/audio.js` owns the sound controls and audio graph; `app/audio/synth.js` is the self-contained synthesizer (it runs in an AudioWorklet, and in Node for `tests/audio.test.mjs`). `app/ui.js` contains the renderer,
+camera and pointer interaction. `app/discovery.js` owns the landing page, learning path, notebook
+and reusable charts. Shared simulation and video behavior are unchanged.
+
+Run `npm run test:app` for numerical and isolated DOM integration tests (38 tests, real model
+geometry, substituted WebGL renderer). They do **not** establish rendered visual quality.
+For rendered checks, run `scripts/smoke-app.mjs` with `ENGINE_LAB_URL` set; set
+`ENGINE_LAB_BROWSER` to a local desktop browser (for example Google Chrome on macOS).
+It captures 1440/1280/1180-wide light and dark states, checks that the toolbar never clips
+and that the stage never overlaps the inspector, and walks a lesson from the learning path.
+
 ## Layout
 - `src/core/`      shared simulation (kinematics, valve timing, pressure, firing) + content
 - `src/engine3d/`  deterministic, instance-based Three.js engine (used by app AND video)
@@ -48,6 +83,10 @@ hardware, and strict functional colour (cerulean = air, vermilion = combustion /
   main-bearing bulkheads, ported heads with pent-roof chambers, hollow cam cover, sump tray, timing cover), so any clip
   plane shows a true section; cut faces are hatched in world space on the plane that made the cut.
 - `src/engine3d/ink.ts` — ID pass + edge shader for the ink outlines (silhouettes, part boundaries, section outlines, creases).
+- `app/ui.js` — the app's composite: ink ID passes at 2× (antialiased outlines, drawing buffer capped at ~3.2 MP),
+  faded parts (X-ray housings, isolation, flow focus, the Cutaway timing chain) drawn as phantom outlines instead of
+  translucent fills, and `APP_LOOK` tones for small repeated parts. The app builds the engine with `fine: true`
+  (denser spring/ring/chain geometry, round gear bores, soft fuel spray); the film keeps the defaults.
 - `video/film/theme.ts` — palette, type (Barlow Condensed / Barlow), light rig, ink strength.
 - `video/three/world.ts` — render pipeline: scene → SSAO → bloom → DoF → ACES subject composited over procedural paper
   (dot grid, contact shadow) → ink. `look.shade` fades between pure line drawing (0) and fully shaded (1).
