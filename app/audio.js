@@ -9,7 +9,7 @@
 import { EngineSynth } from '../audio/synth.js';
 import { SOUND_TUNE, soundConfig } from '../audio/tune.js';
 const SOUND_KEY='engine-lab-sound';
-const SOUND={on:false,mode:'cycle',rpm:0,volume:.7,ctx:null,send:null,level:0,active:true,starting:null,suspendTimer:0,tune:null,lastTheta:null,lastResume:-1e9};
+const SOUND={on:false,mode:'cycle',rpm:0,volume:.7,ctx:null,send:null,level:0,active:true,starting:null,suspendTimer:0,tune:null,lastTheta:null,lastResume:-1e9,preview:null};
 try{ const p=JSON.parse(localStorage.getItem(SOUND_KEY)||'null');
   if(p&&typeof p==='object'&&Number.isFinite(p.volume))SOUND.volume=clamp(p.volume,0,1); }catch(e){}
 function saveSoundPrefs(){ try{ localStorage.setItem(SOUND_KEY,JSON.stringify({volume:SOUND.volume})); }catch(e){} }
@@ -36,14 +36,26 @@ async function soundStart(){
   }
   node.connect(ctx.destination);SOUND.ctx=ctx;soundConfigure();soundSendMode(true);return true;
 }
-function soundConfigure(){ if(!SOUND.send||!EN)return; const c=soundConfig(EN.e,VT); if(SOUND.tune)c.tune=Object.assign({},c.tune,SOUND.tune); SOUND.send(c); }
+function soundConfigure(){ if(!SOUND.send||!EN||SOUND.preview)return; const c=soundConfig(EN.e,VT); if(SOUND.tune)c.tune=Object.assign({},c.tune,SOUND.tune); SOUND.send(c); }
 /** Derive the sound mode from the engine speed; tell the synthesizer only when it changes. */
 function soundSendMode(force){
+  if(SOUND.preview)return;
   const mode=realSpeed()?'real':'cycle',rpm=S.rpm;if(!force&&mode===SOUND.mode&&rpm===SOUND.rpm)return;
   SOUND.mode=mode;SOUND.rpm=rpm;if(SOUND.send)SOUND.send({type:'mode',mode,rpm});soundGain();
 }
 /** A real-speed engine only runs while the model plays; in cycle mode a paused model is already silent, but scrubbing plays. */
-function soundGain(){ if(SOUND.send)SOUND.send({type:'gain',value:SOUND.on&&SOUND.active&&(SOUND.mode==='cycle'||S.playing)?SOUND.volume:0}); }
+function soundGain(){ if(SOUND.send&&!SOUND.preview)SOUND.send({type:'gain',value:SOUND.on&&SOUND.active&&(SOUND.mode==='cycle'||S.playing)?SOUND.volume:0}); }
+/** Atlas "Listen": play one layout at real speed on its own, leaving the Engine page's sound settings untouched. */
+async function soundPreview(arch,rpm){
+  SOUND.starting=soundStart();const ok=await SOUND.starting;SOUND.starting=null;if(!ok)return false;
+  if(typeof clearTimeout==='function')clearTimeout(SOUND.suspendTimer);try{await SOUND.ctx.resume();}catch(e){}
+  SOUND.preview={arch,rpm};SOUND.send(soundConfig(deriveEngine(arch),VT));SOUND.send({type:'mode',mode:'real',rpm});SOUND.send({type:'gain',value:SOUND.volume||.7});
+  return true;
+}
+function soundPreviewStop(){
+  if(!SOUND.preview)return;SOUND.preview=null;soundConfigure();soundSendMode(true);soundGain();
+  if(!SOUND.on&&SOUND.ctx&&typeof setTimeout==='function'){clearTimeout(SOUND.suspendTimer);SOUND.suspendTimer=setTimeout(()=>{if(!SOUND.on&&!SOUND.preview)SOUND.ctx.suspend().catch(()=>{});},400);}
+}
 async function setSound(on){
   if(on===SOUND.on&&!SOUND.starting)return;
   if(on){

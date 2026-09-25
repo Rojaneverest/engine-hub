@@ -33,6 +33,7 @@ jobs:
         run: |
           mkdir -p _site
           cp dist/engine-lab.html _site/index.html
+          cp -R dist/atlas _site/atlas
           touch _site/.nojekyll
       - uses: actions/upload-pages-artifact@v3
         with:

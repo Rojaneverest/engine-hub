@@ -80,6 +80,7 @@ function renderDiscover(){
     <div class="discovery-bottom"><section><div class="eyebrow">Keep something interesting</div><h2>Your notebook</h2><p class="small">Save a scene from the Scene menu to come back to it. Stored in this browser, without an account.</p>
       <div id="notebookList">${notebook.scenes.length?notebook.scenes.map((s,i)=>`<div class="notebook-item"><button class="btn ghost" data-restore="${i}">${esc(sceneLabel(s))}</button><button class="btn sm" data-remove="${i}" aria-label="Remove saved scene ${i+1}">×</button></div>`).join(''):'<p class="small">Your first discovery belongs here. Open the Engine and choose Scene → Save scene.</p>'}</div>
       ${!storageOK?'<p class="small">Browser storage is unavailable. Scenes will last for this session only; use a scene link to keep one.</p>':''}
+      <h2 style="margin-top:26px">Read the Atlas</h2><p class="small">Magazine features on each layout: how it works, its history and the machines that made it famous.</p><button class="btn" id="discoverAtlas">Open the Atlas →</button>
       <h2 style="margin-top:26px">Try the numbers</h2><p class="small">Explore displacement, piston speed, torque and power in separate adjustable experiments.</p><button class="btn" id="discoverLab">Open the Lab →</button>
     </section><section><div class="eyebrow">A pocket reference</div><h2>Small words, big ideas</h2><label class="small" for="glossarySearch">Find a term</label><input class="discovery-input" id="glossarySearch" type="search" placeholder="Torque, overlap, displacement…"><div id="glossaryList"></div></section></div>
     <p class="small" style="margin-top:32px">An illustrated teaching model of a four-stroke gasoline engine. Pressure, timing and gas torque are conceptual. Animation is slowed for inspection.</p>
@@ -90,7 +91,7 @@ function renderDiscover(){
   $('#discoverReset')?.addEventListener('click',confirmResetProgress);
   $('#freeEngine').onclick=()=>{showTab('engine');if(E.returnScene)restoreExploration(E.returnScene);play(false);};
   $('#resumeDiscovery')?.addEventListener('click',()=>restoreScene(notebook.resume));
-  $('#discoverLab').onclick=()=>showTab('lab');
+  $('#discoverLab').onclick=()=>showTab('lab');$('#discoverAtlas').onclick=()=>openAtlas(null);
   $('#discover').querySelectorAll('[data-lesson]').forEach(b=>b.onclick=()=>startLesson(b.dataset.lesson));
   $('#discover').querySelectorAll('[data-restore]').forEach(b=>b.onclick=()=>restoreScene(notebook.scenes[+b.dataset.restore]));
   $('#discover').querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>{notebook.scenes.splice(+b.dataset.remove,1);persistNotebook();renderDiscover();});

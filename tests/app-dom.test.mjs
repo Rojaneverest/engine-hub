@@ -7,12 +7,12 @@ import vm from 'node:vm';
 import {build} from 'esbuild';
 import {parseHTML} from 'linkedom';
 
-const source=['prelude.js','ui.js','lab.js','discovery.js','engine-page.js','audio.js','bootstrap.js'].map(f=>fs.readFileSync('app/'+f,'utf8')).join('\n');
+const source=['prelude.js','ui.js','lab.js','discovery.js','engine-page.js','audio.js','atlas.js','bootstrap.js'].map(f=>fs.readFileSync('app/'+f,'utf8')).join('\n');
 const mocked=source.replace('try {boot();}',`
 initRenderer=()=>{ if(globalThis.graphicsFail)throw Error('test graphics unavailable'); renderer={}; scene=new THREE.Scene(); camera=new THREE.PerspectiveCamera(34,1,.2,120); };
 applyTheme=()=>{}; resize=()=>{};
 try {boot();}`)+`
-globalThis.appTest={S,D,E,SOUND,notebook,LESSONS,LAB,labUpdate,engineState,currentScene,restoreScene,captureExploration,advanceEngine,updateEngineLabels,updateEngineInspector,updateCamera,CAM,get model(){return EN;},get camera(){return camera;}};`;
+globalThis.appTest={S,D,E,SOUND,AT,ATLAS,CREDITS,restoreHash,notebook,LESSONS,LAB,labUpdate,engineState,currentScene,restoreScene,captureExploration,advanceEngine,updateEngineLabels,updateEngineInspector,updateCamera,CAM,get model(){return EN;},get camera(){return camera;}};`;
 fs.mkdirSync('app/.build',{recursive:true}); // the app's imports resolve from here, as in scripts/build-app.mjs; it is git-ignored, so a fresh checkout lacks it
 const bundled=await build({stdin:{contents:mocked,resolveDir:process.cwd()+'/app/.build',sourcefile:'test-app.js'},bundle:true,format:'iife',write:false,logLevel:'silent'});
 
@@ -23,7 +23,8 @@ function app({stored=null,storageFails=false,reducedMotion=false,graphicsFail=fa
   window.HTMLElement.prototype.showModal=function(){this.open=true;};window.HTMLElement.prototype.close=function(){this.open=false;};
   const saved=new Map(stored?[['engine-lab-discoveries-v1',JSON.stringify(stored)]]:[]);if(sound)saved.set('engine-lab-sound',JSON.stringify(sound));
   // A minimal Web Audio stand-in: no AudioWorklet, so the app takes its ScriptProcessor fallback path.
-  if(audio)window.AudioContext=class{constructor(){this.sampleRate=48000;this.state='suspended';this.destination={};}resume(){this.state='running';return Promise.resolve();}suspend(){this.state='suspended';return Promise.resolve();}createScriptProcessor(){return {connect(){}};}};
+  // The DOM library shares its window between test apps, so set or clear the stand-in explicitly every time.
+  window.AudioContext=audio?class{constructor(){this.sampleRate=48000;this.state='suspended';this.destination={};}resume(){this.state='running';return Promise.resolve();}suspend(){this.state='suspended';return Promise.resolve();}createScriptProcessor(){return {connect(){}};}}:undefined;
   const context={document,window,console:{...console,error:(...args)=>{if(!graphicsFail)console.error(...args);}},performance,URL,Set,Map,Float64Array,Float32Array,Uint8Array,Uint16Array,Uint32Array,graphicsFail,
     localStorage:{getItem:k=>saved.get(k)||null,setItem:(k,v)=>{if(storageFails)throw Error('storage denied');saved.set(k,v);}},
     navigator:{},location:{href:'https://example.test/engine-lab.html',hash:''},
@@ -33,7 +34,7 @@ function app({stored=null,storageFails=false,reducedMotion=false,graphicsFail=fa
   window.innerWidth=1280;window.devicePixelRatio=1;
   vm.runInNewContext(bundled.outputFiles[0].text,context,{timeout:15000});
   const $=q=>document.querySelector(q),click=q=>{const el=$(q);assert.ok(el,`missing ${q}`);assert.equal(!!el.closest('[hidden]'),false,`hidden ${q}`);el.click();},change=(q,value)=>{const el=$(q);el.value=value;el.dispatchEvent(new window.Event('change',{bubbles:true}));},input=(q,value)=>{const el=$(q);el.value=value;el.dispatchEvent(new window.Event('input',{bubbles:true}));};
-  return {api:context.appTest,document,$,click,change,input,saved,window};
+  return {api:context.appTest,document,$,click,change,input,saved,window,context};
 }
 
 const engine=a=>a.click('[data-tab="engine"]');
@@ -91,7 +92,7 @@ test('storage failure, glossary, Lab baseline and graphics fallback remain usabl
  const f=app({graphicsFail:true});f.click('[data-lesson="spark"]');assert.match(f.$('#stage').textContent,/3D view could not start/);f.click('#fallbackLab');assert.equal(f.$('#lab').hidden,false);
 });
 test('reduced motion, accessible navigation, menus and collapsed inspector',()=>{
- const a=app({reducedMotion:true});a.click('#freeEngine');assert.equal(a.api.S.playing,false);a.click('#inspectorCollapse');assert.equal(a.$('#engineInspector').hidden,true);a.click('#inspectorReopen');assert.equal(a.$('#engineInspector').hidden,false);key(a,'#partsTab','ArrowRight');assert.equal(a.api.E.mode,'flow');key(a,'#tab-engine','ArrowRight');assert.equal(a.$('#lab').hidden,false);a.click('[data-tab="discover"]');a.click('#learnControls');assert.match(a.$('#dialogTitle').textContent,/Learn/);
+ const a=app({reducedMotion:true});a.click('#freeEngine');assert.equal(a.api.S.playing,false);a.click('#inspectorCollapse');assert.equal(a.$('#engineInspector').hidden,true);a.click('#inspectorReopen');assert.equal(a.$('#engineInspector').hidden,false);key(a,'#partsTab','ArrowRight');assert.equal(a.api.E.mode,'flow');key(a,'#tab-engine','ArrowRight');assert.equal(a.$('#atlas').hidden,false);key(a,'#tab-atlas','ArrowRight');assert.equal(a.$('#lab').hidden,false);a.click('[data-tab="discover"]');a.click('#learnControls');assert.match(a.$('#dialogTitle').textContent,/Learn/);
 });
 test('existing resume scene survives boot and native timeline keys count even at the endpoint',()=>{
  const resume={v:1,arch:'i6',angle:430,cylinder:2,view:'xray',graph:'valves'};
@@ -160,7 +161,7 @@ test('toolbar controls are visible choices that stay in sync with the scene',()=
  a.change('#sceneArchitecture','i4');assert.equal(a.$('#cylinderControl').hidden,false);assert.equal(a.document.querySelectorAll('#sceneCylinder [data-cyl]').length,4);assert.match(a.$('#firingOrder').textContent,/1–3–4–2/);
  a.click('[data-cyl="2"]');assert.equal(a.api.S.focusCyl,2);assert.equal(checked(a,'#sceneCylinder').dataset.cyl,'2');
  a.click('#sceneLabels');assert.equal(a.api.E.labels,'off');a.click('#sceneLabels');assert.equal(a.api.E.labels,'selected');
- a.click('#sceneAbout');assert.equal(a.$('#engineDialog').open,true);assert.match(a.$('#dialogTitle').textContent,/Inline-4/);
+ a.click('#sceneAbout');assert.equal(a.$('#atlas').hidden,false,'ⓘ opens the Atlas');assert.match(a.$('#storyTitle').textContent,/everyday life/);a.click('[data-tab="engine"]');
  for(const id of ['sceneMenu','viewOptions','sceneCamera','eventJump'])assert.equal(a.$('#'+id),null,id);
  assert.equal(a.document.querySelectorAll('#engineView select').length,1,'only the engine picker remains a dropdown');
 });
@@ -239,4 +240,39 @@ test('engine sound starts muted, explains when audio is unavailable, and follows
  a.click('[data-tab="discover"]');assert.equal(a.api.SOUND.active,false,'fades out off the Engine page');a.click('[data-tab="engine"]');assert.equal(a.api.SOUND.active,true);
  key(a,'#gl','m');await settle();assert.equal(a.api.SOUND.on,false,'M switches sound off');key(a,'#gl','M');await settle();assert.equal(a.api.SOUND.on,true);
  const b=app({audio:true,sound:{mode:'real',rpm:5200,volume:.4}});engine(b);assert.equal(b.api.SOUND.on,false,'remembered settings never auto-play');assert.equal(b.api.S.rpm,15,'old sound prefs do not change the engine speed');assert.equal(b.$('#soundVolume').value,'40');
+});
+
+test('Atlas content: every photo is credited and on disk, every render exists, every dated claim has a source',()=>{
+ const a=app(),{ATLAS,CREDITS}=a.api,licence=/^(CC0|Public domain|CC BY(-SA)? [0-9.]+)/;
+ const used=new Set();
+ for(const s of ATLAS){
+  assert.ok(s.title&&s.dek&&s.body.length>=3&&s.quote,`${s.id}: story text`);
+  assert.ok(s.timeline.length>=4,`${s.id}: timeline`);for(const t of s.timeline)assert.match(t.src,/^https:\/\/en\.wikipedia\.org\/wiki\//,`${s.id} ${t.year}: sourced`);
+  for(const id of [s.photo,...s.legends.map(l=>l.photo)]){used.add(id);const c=CREDITS[id];assert.ok(c,`${id}: credited`);assert.match(c.license,licence,`${id}: free licence`);assert.ok(c.author&&c.source.startsWith('https://commons.wikimedia.org/'),`${id}: author and source`);assert.ok(fs.existsSync(`app/atlas/img/${id}.webp`),`${id}: image on disk`);}
+  if(s.arch)for(const kind of ['hero','exploded'])for(const t of ['light','dark'])assert.ok(fs.existsSync(`app/atlas/render/${s.arch}-${kind}-${t}.webp`),`${s.arch} ${kind} ${t} render`);
+ }
+ assert.deepEqual([...ATLAS.filter(s=>s.arch).map(s=>s.arch)].join(),'single,i4,i6,v6,v8,flat6');
+ for(const id of Object.keys(CREDITS))assert.ok(used.has(id),`${id}: credited photo is used`);
+});
+test('Atlas pages: cover, stories, facts from the engine data, navigation, links, credits and the ⓘ button',()=>{
+ const a=app();a.click('[data-tab="atlas"]');
+ assert.equal(a.document.querySelectorAll('#atlas .atlas-card').length,6);assert.ok(a.$('#atlas .atlas-lead'));
+ a.click('[data-story="v8"]');assert.match(a.$('#storyTitle').textContent,/Two banks, one beat/);assert.equal(a.api.AT.story,'v8');
+ assert.match(a.$('.glance').textContent,/1–8–4–3–6–5–7–2/,'firing order comes from the engine data');
+ assert.equal(a.document.querySelectorAll('.story-timeline li').length,a.api.ATLAS.find(s=>s.id==='v8').timeline.length);
+ assert.equal(a.document.querySelectorAll('.atlas-legend .photo-credit').length,a.document.querySelectorAll('.atlas-legend').length,'every legend photo is credited');
+ assert.equal(a.document.querySelectorAll('.atlas-render .r-light').length,2);assert.equal(a.document.querySelectorAll('.atlas-render .r-dark').length,2);
+ a.click('.atlas-next');assert.equal(a.api.AT.story,'flat6');a.click('[data-story=""]');assert.equal(a.api.AT.story,null);assert.ok(a.$('.atlas-mast'));
+ a.click('[data-story="origins"]');assert.ok(a.$('.story-lead-photo'));assert.equal(a.$('[data-explore]'),null,'the opening story has no engine to explore');
+ a.click('[data-story=""]');a.click('[data-story="credits"]');assert.equal(a.document.querySelectorAll('.credits tbody tr').length,Object.keys(a.api.CREDITS).length);
+ a.click('[data-story=""]');a.click('[data-story="i6"]');a.click('[data-explore="i6"]');assert.equal(a.$('#engineView').hidden,false);assert.equal(a.api.S.arch,'i6');
+ a.change('#sceneArchitecture','flat6');a.click('#sceneAbout');assert.equal(a.api.AT.story,'flat6');assert.match(a.$('#storyTitle').textContent,/Low, wide/);
+ const b=app();b.context.location.hash='#atlas/v6';b.api.restoreHash();assert.equal(b.$('#atlas').hidden,false);assert.equal(b.api.AT.story,'v6');
+});
+test('Atlas Listen plays a layout at real speed without touching the Engine page sound, and stops on leaving',async()=>{
+ const none=app();none.click('[data-tab="atlas"]');none.click('[data-story="i4"]');none.click('#atlasListen');await settle();assert.equal(none.$('#atlasListen').getAttribute('aria-pressed'),'false');assert.match(none.$('#atlasListenNote').textContent,/not available/);
+ const a=app({audio:true});a.click('[data-tab="atlas"]');a.click('[data-story="v8"]');
+ a.click('[data-listen-rpm="6000"]');a.click('#atlasListen');await settle();
+ assert.equal(a.$('#atlasListen').getAttribute('aria-pressed'),'true');assert.deepEqual({...a.api.SOUND.preview},{arch:'v8',rpm:6000});assert.equal(a.api.SOUND.on,false,'Engine sound stays off');assert.match(a.$('#atlasListenNote').textContent,/cross-plane v8 at 6,000 rpm/);
+ a.click('[data-tab="discover"]');assert.equal(a.api.SOUND.preview,null,'leaving the Atlas stops it');
 });

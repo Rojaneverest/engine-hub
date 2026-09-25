@@ -2,7 +2,7 @@
 
 ## Interactive app
 
-Run `npm run build:app`, then open `dist/engine-lab.html` in a WebGL-capable desktop browser. The build is one self-contained HTML file; no server is needed.
+Run `npm run build:app`, then open `dist/engine-lab.html` (Atlas images are copied next to it in `dist/atlas/`) in a WebGL-capable desktop browser. The build is one self-contained HTML file; no server is needed.
 Every push to `main` runs the tests, builds the file and publishes it to GitHub Pages (`.github/workflows/pages.yml`).
 The app opens on **Discover**, with a seven-step learning path, a glossary and a local notebook.
 The **Engine** page has one **Parts / Flow / Charts** inspector and one shared timeline.
@@ -20,6 +20,7 @@ It starts paused at 120° in cutaway view. The app targets desktop; phone layout
 - **Engine sound** (transport, off on every load; **M** toggles it). One synthesizer driven by the model's own timing: spark, combustion, exhaust opening, valves seating and intake, per cylinder at its firing offset, with exhaust pulses run through a pipe-and-muffler model per bank (after Baldan et al. 2015). The Speed slider sets both: from 5 to 60 rpm the model turns at that speed and the sound follows it event by event (scrubbing plays what the timeline passes); from 700 to 6,500 rpm the sound is the same engine and firing order at real speed while the model holds 60 rpm, and a note under the transport says the two are not synced. The real-speed engine runs only while the model plays. The cross-plane V8's uneven beat comes from its firing order, not a recording. Volume is remembered. Open the app with `?tune` for a live tuning panel whose values go into `app/audio/tune.js`.
 - The top bar has a light/dark toggle. The choice is remembered in this browser; with no choice made, the app follows the system setting.
 - Learning progress (steps done, parts met) lives only in this browser, with no account. **Reset progress…** in the Learning path menu, or **Reset progress** on Discover, starts the path over after a confirmation; saved scenes and the theme are kept.
+- **Atlas** (fourth tab; links `#atlas` and `#atlas/<story>`): magazine features on each layout plus an opening story on the four-stroke cycle. Each feature has a cutaway and an exploded illustration rendered from this app's model, a sourced timeline (every dated claim links its source), "At a glance" facts taken from the same `ARCHS` data as the Engine page, a Legends gallery of freely licensed photographs with credits, **Listen** (the layout at real speed through the same synthesizer, without touching the Engine page's sound) and **Explore in 3D**. The Engine toolbar's ⓘ opens the matching feature. Content: `app/atlas/content.js`. Photos: list them in `app/atlas/photos.json`, then `node scripts/fetch-atlas-images.mjs` downloads them from Wikimedia Commons, converts them to WebP and writes `app/atlas/credits.json`. Illustrations: `npm run build:app`, then `ENGINE_LAB_BROWSER=… node scripts/render-atlas.mjs`.
 - Saved scenes retain camera, instance, section depth, separation and visibility. Older scene links remain supported. Progress (steps done, parts met) and up to 12 scenes are stored locally; storage failure falls back to the current session.
 - Lab experiments remain independent of the 3D dimensions. WebGL failure leaves Lab and the Discover glossary available.
 
@@ -28,7 +29,7 @@ It starts paused at 120° in cutaway view. The app targets desktop; phone layout
 camera and pointer interaction. `app/discovery.js` owns the landing page, learning path, notebook
 and reusable charts. Shared simulation and video behavior are unchanged.
 
-Run `npm run test:app` for numerical and isolated DOM integration tests (38 tests, real model
+Run `npm run test:app` for numerical and isolated DOM integration tests (41 tests, real model
 geometry, substituted WebGL renderer). They do **not** establish rendered visual quality.
 For rendered checks, run `scripts/smoke-app.mjs` with `ENGINE_LAB_URL` set; set
 `ENGINE_LAB_BROWSER` to a local desktop browser (for example Google Chrome on macOS).

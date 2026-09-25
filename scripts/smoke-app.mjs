@@ -42,5 +42,7 @@ try {
  await p.click('[data-tab="discover"]');await shot('discover');
  await p.click('[data-tab="engine"]');await p.click('#soundToggle');await p.waitForFunction(()=>document.querySelector('#soundToggle').getAttribute('aria-pressed')==='true'||/not available/.test(document.querySelector('#engineSceneStatus').textContent));
  await p.evaluate(()=>{const r=document.querySelector('#engineRpm');r.value=17;r.dispatchEvent(new Event('input',{bubbles:true}));});if(await p.$eval('#soundSyncNote',n=>n.hidden))throw Error('real-speed note missing');await p.click('#soundMenu summary');await shot('sound');await p.click('#soundToggle');
+ await p.click('[data-tab="atlas"]');await p.click('[data-story="v8"]');await p.waitForSelector('#storyTitle');
+ assert.equal(await p.$$eval('#atlas img',ims=>ims.filter(i=>i.loading!=='lazy'&&!(i.complete&&i.naturalWidth)).length),0,'Atlas images load');await shot('atlas-v8');
  assert.deepEqual(errors,[]);console.log(`Browser smoke passed. Screenshots: ${out}`);
 } finally {await browser.close();}

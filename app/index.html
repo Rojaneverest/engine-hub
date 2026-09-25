@@ -6,7 +6,7 @@
 <title>Engine Lab</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
 <script>try{var t=localStorage.getItem('engine-lab-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;}catch(e){}</script>
 <style>
 :root{
@@ -110,6 +110,7 @@ input[type=range]{width:100%;accent-color:var(--brass)}
     <nav class="tabs" role="tablist">
       <button role="tab" aria-selected="true" data-tab="discover">Discover</button>
       <button role="tab" aria-selected="false" data-tab="engine">Engine</button>
+      <button role="tab" aria-selected="false" data-tab="atlas">Atlas</button>
       <button role="tab" aria-selected="false" data-tab="lab">Lab</button>
     </nav>
     <div class="spacer"></div>
@@ -120,7 +121,7 @@ input[type=range]{width:100%;accent-color:var(--brass)}
   <main class="view" id="discover"></main>
   <main class="view engine-page" id="engineView" hidden>
     <header id="engineSceneHeader" aria-label="Engine controls">
-      <div class="tool-group"><label class="sr-only" for="sceneArchitecture">Engine</label><select id="sceneArchitecture" class="select"></select><button class="btn icon" id="sceneAbout" aria-label="About this engine layout" title="About this layout">i</button></div>
+      <div class="tool-group"><label class="sr-only" for="sceneArchitecture">Engine</label><select id="sceneArchitecture" class="select"></select><button class="btn icon" id="sceneAbout" aria-label="About this engine layout" title="Read about this layout in the Atlas">i</button></div>
       <div class="segmented" id="sceneView" role="radiogroup" aria-label="Model view"><button role="radio" data-view="full">Full</button><button role="radio" data-view="cutaway">Cutaway</button><button role="radio" data-view="xray">X-ray</button></div>
       <button class="btn toggle" id="sceneExplode" aria-pressed="false">Explode</button>
       <label class="inline-range" id="cutControl" title="How far the section cuts into the engine"><span>Section</span><input id="sceneCut" type="range" min="0" max="100" value="100"><output id="sceneCutValue"></output></label>
@@ -152,5 +153,6 @@ input[type=range]{width:100%;accent-color:var(--brass)}
   </main>
   <dialog id="engineDialog" aria-labelledby="dialogTitle"><button class="btn" id="closeDialog">Close</button><div id="dialogContent"></div></dialog>
 
+  <main class="view" id="atlas" hidden></main>
   <main class="view" id="lab" hidden></main>
 </div>
